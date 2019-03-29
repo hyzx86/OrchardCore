@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace OrchardCore.Email.Services
 {
@@ -37,12 +38,28 @@ namespace OrchardCore.Email.Services
             {
                 message.From = new MailAddress(_options.DefaultSender);
             }
-            
+
             try
             {
-                using (var client = GetClient())
+                using (var client = new MailKit.Net.Smtp.SmtpClient())
                 {
-                    await client.SendMailAsync(message);
+                    // For demo-purposes, accept all SSL certificates (in case the server supports STARTTLS)
+                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                    client.Connect(_options.Host, _options.Port, _options.EnableSsl);
+
+                    if (_options.RequireCredentials)
+                    {
+                        if (!_options.UseDefaultCredentials)
+                        {
+                            // Note: only needed if the SMTP server requires authentication
+                            client.Authenticate(_options.UserName, _options.Password);
+                        }
+                    }
+
+                    await client.SendAsync((MimeMessage)message);
+                    client.Disconnect(true);
+
                     return SmtpResult.Success;
                 }
             }
@@ -58,7 +75,7 @@ namespace OrchardCore.Email.Services
             {
                 DeliveryMethod = _options.DeliveryMethod
             };
-            
+
             switch (smtp.DeliveryMethod)
             {
                 case SmtpDeliveryMethod.Network:
