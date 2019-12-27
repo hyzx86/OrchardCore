@@ -18,7 +18,7 @@ namespace OrchardCore.DisplayManagement.Liquid
                 switch (name)
                 {
                     case "Name": return new StringValue(culture.Name);
-                    case "Dir": return new StringValue(culture.TextInfo.IsRightToLeft ? "rtl" : "");
+                    case "Dir": return new StringValue(culture.TextInfo.IsRightToLeft ? "rtl" : "ltr");
 
                     default: return null;
                 }
@@ -27,7 +27,7 @@ namespace OrchardCore.DisplayManagement.Liquid
 
         public Task RenderingAsync(TemplateContext context)
         {
-            context.LocalScope.SetValue("Culture", CultureInfo.CurrentUICulture);
+            context.SetValue("Culture", CultureInfo.CurrentUICulture);
 
             return Task.CompletedTask;
         }

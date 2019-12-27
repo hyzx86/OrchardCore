@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
-using OrchardCore.Liquid;
 using OrchardCore.Workflows.Abstractions.Models;
 using OrchardCore.Workflows.Activities;
 using OrchardCore.Workflows.Models;
@@ -14,24 +12,21 @@ namespace OrchardCore.Email.Workflows.Activities
     {
         private readonly ISmtpService _smtpService;
         private readonly IWorkflowExpressionEvaluator _expressionEvaluator;
-        private readonly ILogger<EmailTask> _logger;
-
+        
         public EmailTask(
             ISmtpService smtpService,
             IWorkflowExpressionEvaluator expressionEvaluator,
-            IStringLocalizer<EmailTask> localizer,
-            ILiquidTemplateManager liquidTemplateManager,
-            ILogger<EmailTask> logger
+            IStringLocalizer<EmailTask> localizer
         )
         {
             _smtpService = smtpService;
-            _expressionEvaluator = expressionEvaluator;
-            _logger = logger;
+            _expressionEvaluator = expressionEvaluator;           
             T = localizer;
         }
 
         private IStringLocalizer T { get; }
         public override string Name => nameof(EmailTask);
+        public override LocalizedString DisplayText => T["Email Task"];
         public override LocalizedString Category => T["Messaging"];
 
         public WorkflowExpression<string> Sender
