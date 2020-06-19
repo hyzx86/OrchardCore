@@ -41,7 +41,10 @@ namespace OrchardCore.Queries.Sql.GraphQL.Queries
 
                 var name = query.Name;
                 var source = query.Source;
-
+                if (source.Equals("sql", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
                 var querySchema = JObject.Parse(query.Schema);
 
                 var type = querySchema["type"].ToString();

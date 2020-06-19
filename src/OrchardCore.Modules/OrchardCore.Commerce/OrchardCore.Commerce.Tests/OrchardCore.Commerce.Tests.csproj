@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>OrchardCore.Tests</AssemblyName>
+    <PackageId>OrchardCore.Tests</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\OrchardCore.ContentFields\OrchardCore.ContentFields.csproj" />
+    <ProjectReference Include="..\MoneyDataType\MoneyDataType.csproj" />
+    <ProjectReference Include="..\OrchardCore.Commerce.csproj" />
+  </ItemGroup>
+
+</Project>
