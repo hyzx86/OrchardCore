@@ -51,5 +51,6 @@
     "postcss": "7.0.32",
     "postcss-rtl": "^1.7.3",
     "typescript": "^3.9.5"
-  }
+  },
+  "__npminstall_done": false
 }
