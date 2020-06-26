@@ -207,5 +207,5 @@ src/Templates/**/content/**/[Oo]bj/
 # BenchmarkDotNet artifacts
 BenchmarkDotNet.Artifacts
 
-/.cr/personal/Editor
-/.vscode/solution-explorer
+/.cr
+/.vscode
