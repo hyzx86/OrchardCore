@@ -156,14 +156,11 @@ namespace OrchardCore.Queries.Controllers
             {
                 return NotFound();
             }
-            if (!string.IsNullOrWhiteSpace(query.Schema))
+            if (!string.IsNullOrWhiteSpace(query.Schema) && !CheckSchema(query.Schema))
             {
-                if (!SchemaCheck(query.Schema))
-                { 
-                    _notifier.Error(H["Schema is not a correct json format."]);
-                    model.Editor = await _displayManager.BuildEditorAsync(query, updater: _updateModelAccessor.ModelUpdater, isNew: true);
-                    return View(model);
-                }
+                _notifier.Error(H["Schema is not a correct json format."]);
+                model.Editor = await _displayManager.BuildEditorAsync(query, updater: _updateModelAccessor.ModelUpdater, isNew: true);
+                return View(model);
             }
             var editor = await _displayManager.UpdateEditorAsync(query, updater: _updateModelAccessor.ModelUpdater, isNew: true);
 
@@ -221,14 +218,11 @@ namespace OrchardCore.Queries.Controllers
             }
 
             var editor = await _displayManager.UpdateEditorAsync(query, updater: _updateModelAccessor.ModelUpdater, isNew: false);
-            if (!string.IsNullOrWhiteSpace(query.Schema))
+            if (!string.IsNullOrWhiteSpace(query.Schema) && !CheckSchema(query.Schema))
             {
-                if (!SchemaCheck(query.Schema))
-                {
-                    model.Editor = editor;
-                    _notifier.Error(H["Schema is not a correct json format."]);
-                    return View(model);
-                }
+                model.Editor = editor;
+                _notifier.Error(H["Schema is not a correct json format."]);
+                return View(model);
             }
             if (ModelState.IsValid)
             {
@@ -266,9 +260,8 @@ namespace OrchardCore.Queries.Controllers
             return RedirectToAction("Index");
         }
 
-        private bool SchemaCheck(string schema)
-        {
-
+        private bool CheckSchema(string schema)
+        { 
             try
             {
                 JToken.Parse(schema);

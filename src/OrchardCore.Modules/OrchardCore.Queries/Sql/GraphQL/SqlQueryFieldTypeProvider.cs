@@ -61,7 +61,7 @@ namespace OrchardCore.Queries.Sql.GraphQL.Queries
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"The Query {name}'s Schema parse error, Please check the Query's Schema is a correct json format , Schema:{query.Schema}, {System.Environment.NewLine} Error Details:'{e}");
+                    _logger.LogError($"The Query {name}'s Schema parse error, Please check the Schema is a correct json format , Schema:{query.Schema}, {System.Environment.NewLine} Error Details:'{e}");
                 }
             }
 
