@@ -4,37 +4,48 @@
 
 `OrchardCore.OpenId` provides the following features:
 
-- Core Components
-- Authorization Server
-- Management Interface
-- Token Validation
-- OIDC Client
+- 核心组件
+- 授权服务器
+- 管理界面
+- 令牌验证
+- OpenId 客户端 （OIDC）
 
-## Core Components
+## 核心组件Core Components
 
 Registers the core components used by the OpenID module.
+注册 OpenID 模块使用的核心组件。
 
-## Management Interface
+## 管理界面Management Interface
 
 Allows adding, editing and removing the registered applications.
+允许添加、编辑和删除已注册的应用程序。
 
-## Authorization Server
+## 授权服务器Authorization Server
 
 Enables authentication of external applications using the OpenID Connect/OAuth 2.0 standards.  
+使用 OpenID Connect/OAuth 2.0 标准支持外部应用程序的身份验证。
 It is based on the [`OpenIddict`](https://github.com/openiddict/openiddict-core) library allowing.  
+它基于允许的[`OpenIddict`](https://github.com/openiddict/openiddict-core) 库。
 Orchard Core to act as identity provider to support token authentication without the need of an external identity provider.  
+Orchard Core 充当身份提供程序，以支持令牌身份验证，而无需外部标识提供程序。
 
 - Orchard Core can also be used as an identity provider for centralizing the user access permissions to external applications.
+  Orchard Core 还可用作标识提供程序，用于将用户访问权限集中到外部应用程序。
 - Orchard Core services.
-  - The authorization server feature maintains its own private JWT/validation handler instance for the userinfo API endpoint. This way, you don't have to enable the token validation feature for current tenant.
+  果园核心服务。
+- The authorization server feature maintains its own private JWT/validation handler instance for the userinfo API endpoint. This way, you don't have to enable the token validation feature for current tenant. 
+  授权服务器功能维护其自己的专用 JWT/验证处理程序实例的用户信息 API 终结点。这样，您就不必为当前租户启用令牌验证功能。
 
 Flows supported: [code/implicit/hybrid flows](http://openid.net/specs/openid-connect-core-1_0.html) and [client credentials/resource owner password grants](https://tools.ietf.org/html/rfc6749).
+支持的流：[code/implicit/hybrid flows](http://openid.net/specs/openid-connect-core-1_0.html) 和 [client credentials/resource owner password grants](https://tools.ietf.org/html/rfc6749)。
 
-### Configuration
+### 配置 Configuration
 
 Configuration can be set through the _OpenID Connect_ settings menu in the admin dashboard and also through a recipe step.
+可以通过管理仪表板中的OpenID Connect设置菜单以及配方步骤设置配置。
 
 Available settings are:
+可用设置包括：
 
 - Testing Mode: Enabling Testing mode, removes the need of providing a certificate for signing tokens providing an ephemeral key. Also removes the requirement of using HTTPS for issuing tokens.
 - Token Format: there are two options:
@@ -57,7 +68,7 @@ Available settings are:
 
 A sample of OpenID Connect Settings recipe step:
 
-```json
+```json 
 {
       "name": "OpenIdServerSettings",
       "TestingModeEnabled": false,
