@@ -39,7 +39,7 @@ function initializeMediaApplication(displayMediaApplication, mediaApplicationUrl
       mediaApp = new Vue({
         el: '#mediaApp',
         data: {
-          selectedFolder: _root,
+          selectedFolder: {},
           mediaItems: [],
           selectedMedias: [],
           errors: [],
@@ -108,6 +108,12 @@ function initializeMediaApplication(displayMediaApplication, mediaApplicationUrl
             self.itemsInPage = itemsInPage;
             self.selectedMedias = [];
           });
+
+          if (!localStorage.getItem('mediaApplicationPrefs')) {
+            self.selectedFolder = _root;
+            return;
+          }
+
           self.currentPrefs = JSON.parse(localStorage.getItem('mediaApplicationPrefs'));
         },
         computed: {
@@ -148,6 +154,12 @@ function initializeMediaApplication(displayMediaApplication, mediaApplicationUrl
                 });
                 break;
 
+              case 'lastModify':
+                filtered.sort(function (a, b) {
+                  return self.sortAsc ? a.lastModify - b.lastModify : b.lastModify - a.lastModify;
+                });
+                break;
+
               default:
                 filtered.sort(function (a, b) {
                   return self.sortAsc ? a.name.toLowerCase().localeCompare(b.name.toLowerCase()) : b.name.toLowerCase().localeCompare(a.name.toLowerCase());
@@ -162,7 +174,7 @@ function initializeMediaApplication(displayMediaApplication, mediaApplicationUrl
             return result;
           },
           thumbSize: function thumbSize() {
-            return this.smallThumbs ? 160 : 240;
+            return this.smallThumbs ? 100 : 240;
           },
           currentPrefs: {
             get: function get() {
@@ -766,7 +778,7 @@ Vue.component('media-items-grid', {
 });
 // <media-items-table> component
 Vue.component('media-items-table', {
-  template: "\n        <table class=\"table media-items-table\">\n            <thead>\n                <tr class=\"header-row\">\n                    <th scope=\"col\" class=\"thumbnail-column\">{{ T.imageHeader }}</th>\n                    <th scope=\"col\" v-on:click=\"changeSort('name')\">\n                       {{ T.nameHeader }}\n                         <sort-indicator colname=\"name\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator>\n                    </th>\n                    <th scope=\"col\" v-on:click=\"changeSort('size')\">\n                        <span class=\"optional-col\">\n                            {{ T.sizeHeader }}\n                         <sort-indicator colname=\"size\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator>\n                        </span>\n                    </th>\n                    <th scope=\"col\" v-on:click=\"changeSort('mime')\">\n                        <span class=\"optional-col\">\n                           {{ T.typeHeader }}\n                         <sort-indicator colname=\"mime\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator>\n                        </span>\n                    </th>\n                </tr>\n            </thead>\n            <tbody>\n                    <tr v-for=\"media in filteredMediaItems\"\n                          class=\"media-item\"\n                          :class=\"{selected: isMediaSelected(media)}\"\n                          v-on:click.stop=\"toggleSelectionOfMedia(media)\"\n                          draggable=\"true\" v-on:dragstart=\"dragStart(media, $event)\"\n                          :key=\"media.name\">\n                             <td class=\"thumbnail-column\">\n                                <div class=\"img-wrapper\">\n                                    <img v-if=\"media.mime.startsWith('image')\" draggable=\"false\" :src=\"buildMediaUrl(media.url, thumbSize)\" />\n                                    <i v-else class=\"fa fa-file-o fa-lg\" :data-mime=\"media.mime\"></i>\n                                </div>\n                            </td>\n                            <td>\n                                <div class=\"media-name-cell\">\n                                   <span class=\"break-word\"> {{ media.name }} </span>\n                                    <div class=\"buttons-container\">\n                                        <a href=\"javascript:;\" class=\"btn btn-link btn-sm mr-1 edit-button\" v-on:click.stop=\"renameMedia(media)\"> {{ T.editButton }} </a >\n                                        <a href=\"javascript:;\" class=\"btn btn-link btn-sm delete-button\" v-on:click.stop=\"deleteMedia(media)\"> {{ T.deleteButton }} </a>\n                                        <a :href=\"media.url\" class=\"btn btn-link btn-sm view-button\"> {{ T.viewButton }} </a>\n                                    </div>\n                                </div>\n                            </td>\n                            <td>\n                                <div class=\"text-col optional-col\"> {{ isNaN(media.size)? 0 : Math.round(media.size / 1024) }} KB</div>\n                            </td>\n                            <td>\n                                <div class=\"text-col optional-col\">{{ media.mime }}</div>\n                            </td>\n                   </tr>\n            </tbody>\n        </table>\n        ",
+  template: "\n        <table class=\"table media-items-table\">\n            <thead>\n                <tr class=\"header-row\">\n                    <th scope=\"col\" class=\"thumbnail-column\">{{ T.imageHeader }}</th>\n                    <th scope=\"col\" v-on:click=\"changeSort('name')\">\n                       {{ T.nameHeader }}\n                         <sort-indicator colname=\"name\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator>\n                    </th>\n                    <th scope=\"col\" v-on:click=\"changeSort('lastModify')\"> \n                       {{ T.lastModifyHeader }} \n                         <sort-indicator colname=\"lastModify\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator> \n                    </th> \n                    <th scope=\"col\" v-on:click=\"changeSort('size')\">\n                        <span class=\"optional-col\">\n                            {{ T.sizeHeader }}\n                         <sort-indicator colname=\"size\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator>\n                        </span>\n                    </th>\n                    <th scope=\"col\" v-on:click=\"changeSort('mime')\">\n                        <span class=\"optional-col\">\n                           {{ T.typeHeader }}\n                         <sort-indicator colname=\"mime\" :selectedcolname=\"sortBy\" :asc=\"sortAsc\"></sort-indicator>\n                        </span>\n                    </th>\n                </tr>\n            </thead>\n            <tbody>\n                    <tr v-for=\"media in filteredMediaItems\"\n                          class=\"media-item\"\n                          :class=\"{selected: isMediaSelected(media)}\"\n                          v-on:click.stop=\"toggleSelectionOfMedia(media)\"\n                          draggable=\"true\" v-on:dragstart=\"dragStart(media, $event)\"\n                          :key=\"media.name\">\n                             <td class=\"thumbnail-column\">\n                                <div class=\"img-wrapper\">\n                                    <img v-if=\"media.mime.startsWith('image')\" draggable=\"false\" :src=\"buildMediaUrl(media.url, thumbSize)\" />\n                                    <i v-else class=\"fa fa-file-o fa-lg\" :data-mime=\"media.mime\"></i>\n                                </div>\n                            </td>\n                            <td>\n                                <div class=\"media-name-cell\">\n                                   <span class=\"break-word\"> {{ media.name }} </span>\n                                    <div class=\"buttons-container\">\n                                        <a href=\"javascript:;\" class=\"btn btn-link btn-sm mr-1 edit-button\" v-on:click.stop=\"renameMedia(media)\"> {{ T.editButton }} </a >\n                                        <a href=\"javascript:;\" class=\"btn btn-link btn-sm delete-button\" v-on:click.stop=\"deleteMedia(media)\"> {{ T.deleteButton }} </a>\n                                        <a :href=\"media.url\" class=\"btn btn-link btn-sm view-button\"> {{ T.viewButton }} </a>\n                                    </div>\n                                </div>\n                            </td>\n                            <td>\n                                <div class=\"text-col\"> {{ printDateTime(media.lastModify) }} </div>\n                            </td>\n                            <td>\n                                <div class=\"text-col optional-col\"> {{ isNaN(media.size)? 0 : Math.round(media.size / 1024) }} KB</div>\n                            </td>\n                            <td>\n                                <div class=\"text-col optional-col\">{{ media.mime }}</div>\n                            </td>\n                   </tr>\n            </tbody>\n        </table>\n        ",
   data: function data() {
     return {
       T: {}
@@ -783,6 +795,7 @@ Vue.component('media-items-table', {
     var self = this;
     self.T.imageHeader = $('#t-image-header').val();
     self.T.nameHeader = $('#t-name-header').val();
+    self.T.lastModifyHeader = $('#t-lastModify-header').val();
     self.T.sizeHeader = $('#t-size-header').val();
     self.T.typeHeader = $('#t-type-header').val();
     self.T.editButton = $('#t-edit-button').val();
@@ -813,6 +826,10 @@ Vue.component('media-items-table', {
     },
     dragStart: function dragStart(media, e) {
       bus.$emit('mediaDragStartRequested', media, e);
+    },
+    printDateTime: function printDateTime(datemillis) {
+      var d = new Date(datemillis);
+      return d.toLocaleString();
     }
   }
 });
@@ -827,8 +844,8 @@ Vue.component('pager', {
   },
   data: function data() {
     return {
-      pageSize: 5,
-      pageSizeOptions: [5, 10, 30, 50, 100],
+      pageSize: 10,
+      pageSizeOptions: [10, 30, 50, 100],
       current: 0,
       T: {}
     };
@@ -940,6 +957,7 @@ function initializeAttachedMediaField(el, idOfUploadButton, uploadAction, mediaI
   var target = $(document.getElementById($(el).data('for')));
   var initialPaths = target.data("init");
   var mediaFieldEditor = $(el);
+  var idprefix = mediaFieldEditor.attr("id");
   var mediaFieldApp;
   mediaFieldApps.push(mediaFieldApp = new Vue({
     el: mediaFieldEditor.get(0),
@@ -947,6 +965,7 @@ function initializeAttachedMediaField(el, idOfUploadButton, uploadAction, mediaI
       mediaItems: [],
       selectedMedia: null,
       smallThumbs: false,
+      idPrefix: idprefix,
       initialized: false
     },
     created: function created() {
@@ -1067,9 +1086,6 @@ function initializeAttachedMediaField(el, idOfUploadButton, uploadAction, mediaI
         self.selectMedia(media);
       });
       var selector = '#' + idOfUploadButton;
-      $(document).bind('drop dragover', function (e) {
-        e.preventDefault();
-      });
       var editorId = mediaFieldEditor.attr('id');
       $(selector).fileupload({
         limitConcurrentUploads: 20,
@@ -1098,19 +1114,28 @@ function initializeAttachedMediaField(el, idOfUploadButton, uploadAction, mediaI
         },
         done: function done(e, data) {
           var newMediaItems = [];
+          var errormsg = "";
 
           if (data.result.files.length > 0) {
             for (var i = 0; i < data.result.files.length; i++) {
-              data.result.files[i].isNew = true;
-              newMediaItems.push(data.result.files[i]);
+              data.result.files[i].isNew = true; //if error is defined probably the file type is not allowed
+
+              if (data.result.files[i].error === undefined || data.result.files[i].error === null) newMediaItems.push(data.result.files[i]);else errormsg += data.result.files[i].error + "\n";
             }
+          }
+
+          if (errormsg !== "") {
+            alert(errormsg);
+            return;
           }
 
           if (newMediaItems.length > 1 && allowMultiple === false) {
             alert($('#onlyOneItemMessage').val());
             mediaFieldApp.mediaItems.push(newMediaItems[0]);
+            mediaFieldApp.initialized = true;
           } else {
             mediaFieldApp.mediaItems = mediaFieldApp.mediaItems.concat(newMediaItems);
+            mediaFieldApp.initialized = true;
           }
         },
         error: function error(jqXHR, textStatus, errorThrown) {
@@ -1140,15 +1165,17 @@ function initializeAttachedMediaField(el, idOfUploadButton, uploadAction, mediaI
 
           if (index > -1) {
             removed = this.mediaItems[index];
-            removed.isRemoved = true;
-            this.mediaItems.splice([index], 1, removed); //this.mediaItems.splice(index, 1);
+            removed.isRemoved = true; //this.mediaItems.splice([index], 1, removed);
+
+            this.mediaItems.splice(index, 1);
           }
         } else {
           // The remove button can also remove a unique media item
           if (this.mediaItems.length === 1) {
             removed = this.mediaItems[index];
-            removed.isRemoved = true;
-            this.mediaItems.splice(0, 1, removed); //this.mediaItems.splice(0, 1);
+            removed.isRemoved = true; //this.mediaItems.splice(0, 1, removed);                        
+
+            this.mediaItems.splice(0, 1);
           }
         }
 
@@ -1181,6 +1208,7 @@ function initializeMediaField(el, modalBodyElement, mediaItemUrl, allowMultiple)
   var target = $(document.getElementById($(el).data('for')));
   var initialPaths = target.data("init");
   var mediaFieldEditor = $(el);
+  var idprefix = mediaFieldEditor.attr("id");
   var mediaFieldApp;
   mediaFieldApps.push(mediaFieldApp = new Vue({
     el: mediaFieldEditor.get(0),
@@ -1188,6 +1216,7 @@ function initializeMediaField(el, modalBodyElement, mediaItemUrl, allowMultiple)
       mediaItems: [],
       selectedMedia: null,
       smallThumbs: false,
+      idPrefix: idprefix,
       initialized: false
     },
     created: function created() {
@@ -1324,8 +1353,10 @@ function initializeMediaField(el, modalBodyElement, mediaItemUrl, allowMultiple)
         if (files.length > 1 && allowMultiple === false) {
           alert($('#onlyOneItemMessage').val());
           mediaFieldApp.mediaItems.push(files[0]);
+          mediaFieldApp.initialized = true;
         } else {
           mediaFieldApp.mediaItems = mediaFieldApp.mediaItems.concat(files);
+          mediaFieldApp.initialized = true;
         }
       },
       removeSelected: function removeSelected(event) {
@@ -1373,13 +1404,13 @@ var mediaFieldApps = [];
 // different media field editors share this component to present the thumbs.
 Vue.component('mediaFieldThumbsContainer', {
   template: '\
-       <div id="mediaContainerMain" v-cloak>\
+       <div :id="idPrefix + \'_mediaContainerMain\'" v-cloak>\
          <div v-if="mediaItems.length < 1" class="card text-center">\
              <div class= "card-body" >\
                 <span class="hint">{{T.noImages}}</span>\
              </div>\
          </div>\
-         <draggable :list="mediaItems" element="ol" class="row media-items-grid" >\
+         <draggable :list="mediaItems" tag="ol" class="row media-items-grid" >\
             <li v-for="media in mediaItems"\
                 :key="media.vuekey" \
                 class="media-container-main-list-item card"\
@@ -1425,7 +1456,8 @@ Vue.component('mediaFieldThumbsContainer', {
   props: {
     mediaItems: Array,
     selectedMedia: Object,
-    thumbSize: Number
+    thumbSize: Number,
+    idPrefix: String
   },
   created: function created() {
     var self = this; // retrieving localized strings from view

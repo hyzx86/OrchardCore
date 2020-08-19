@@ -4,6 +4,7 @@ function initializeMediaField(el, modalBodyElement, mediaItemUrl, allowMultiple)
     var initialPaths = target.data("init");
 
     var mediaFieldEditor = $(el);
+    var idprefix = mediaFieldEditor.attr("id");
     var mediaFieldApp;
 
     mediaFieldApps.push(mediaFieldApp = new Vue({
@@ -12,6 +13,7 @@ function initializeMediaField(el, modalBodyElement, mediaItemUrl, allowMultiple)
             mediaItems: [],
             selectedMedia: null,
             smallThumbs: false,
+            idPrefix: idprefix,
             initialized: false
         },
         created: function () {
@@ -139,8 +141,10 @@ function initializeMediaField(el, modalBodyElement, mediaItemUrl, allowMultiple)
                 if ((files.length > 1) && (allowMultiple === false)) {
                     alert($('#onlyOneItemMessage').val());
                     mediaFieldApp.mediaItems.push(files[0]);
+                    mediaFieldApp.initialized = true;
                 } else {
                     mediaFieldApp.mediaItems = mediaFieldApp.mediaItems.concat(files);
+                    mediaFieldApp.initialized = true;
                 }
             },
             removeSelected: function (event) {
