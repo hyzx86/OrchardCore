@@ -22,7 +22,9 @@ namespace OrchardCore.Apis.GraphQL.Resolvers
 
             try
             {
-                return await _resolver(context);
+                var result = await _resolver(context);
+
+                return result;
             }
             finally
             {

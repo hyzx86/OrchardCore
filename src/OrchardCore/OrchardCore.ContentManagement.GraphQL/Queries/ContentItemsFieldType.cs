@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using GraphQL.Types;
+using GraphQL.Types.Relay;
+using GraphQL.Types.Relay.DataObjects;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
@@ -42,7 +44,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
         {
             Name = "ContentItems";
 
-            Type = typeof(ListGraphType<ContentItemType>);
+            Type = typeof(ConnectionType<ContentItemType>);
 
             var whereInput = new ContentItemWhereInput(contentItemName, optionsAccessor);
             var orderByInput = new ContentItemOrderByInput(contentItemName);
@@ -55,7 +57,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                 new QueryArgument<PublicationStatusGraphType> { Name = "status", Description = "publication status of the content item", ResolvedType = new PublicationStatusGraphType(), DefaultValue = PublicationStatusEnum.Published }
             );
 
-            Resolver = new LockedAsyncFieldResolver<IEnumerable<ContentItem>>(Resolve);
+            Resolver = new LockedAsyncFieldResolver<Connection<ContentItem>>(Resolve);
 
             schema.RegisterType(whereInput);
             schema.RegisterType(orderByInput);
@@ -64,7 +66,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             _defaultNumberOfItems = settingsAccessor.Value.DefaultNumberOfResults;
         }
 
-        private async Task<IEnumerable<ContentItem>> Resolve(ResolveFieldContext context)
+        private async Task<Connection<ContentItem>> Resolve(ResolveFieldContext context)
         {
             var graphContext = (GraphQLContext)context.UserContext;
 
@@ -99,6 +101,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             query = OrderBy(query, context);
 
             var contentItemsQuery = await FilterWhereArguments(query, where, context, session, graphContext);
+            var totalCount = await contentItemsQuery.CountAsync();
             contentItemsQuery = PageQuery(contentItemsQuery, context, graphContext);
 
             var contentItems = await contentItemsQuery.ListAsync();
@@ -107,8 +110,14 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             {
                 contentItems = await filter.PostQueryAsync(contentItems, context);
             }
+            //var endCursor = contentItems?.Last()?.ContentItemId;
+            //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null;
+            return new Connection<ContentItem>()
+            {
+                Edges = contentItems.Select(x => new Edge<ContentItem> { Cursor = x.ContentItemId, Node = x }).ToList(),
+                TotalCount = totalCount  
 
-            return contentItems;
+            };
         }
 
         private async Task<IQuery<ContentItem>> FilterWhereArguments(
