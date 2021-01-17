@@ -21,10 +21,8 @@ namespace OrchardCore.Apis.GraphQL.Resolvers
             await graphContext.ExecutionContextLock.WaitAsync();
 
             try
-            {
-                var result = await _resolver(context);
-
-                return result;
+            { 
+                return await _resolver(context); 
             }
             finally
             {

@@ -110,13 +110,13 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             {
                 contentItems = await filter.PostQueryAsync(contentItems, context);
             }
-            //var endCursor = contentItems?.Last()?.ContentItemId;
+            //UNDONE:what is the endCursor and cursor? how to set it?
+            //var endCursor = contentItems?.Last()?.ContentItemId; 
             //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null;
             return new Connection<ContentItem>()
             {
                 Edges = contentItems.Select(x => new Edge<ContentItem> { Cursor = x.ContentItemId, Node = x }).ToList(),
-                TotalCount = totalCount  
-
+                TotalCount = totalCount   
             };
         }
 

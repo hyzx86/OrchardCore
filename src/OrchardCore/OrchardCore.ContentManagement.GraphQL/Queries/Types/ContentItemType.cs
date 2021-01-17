@@ -32,7 +32,6 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries.Types
             Field<DateTimeGraphType>("createdUtc", resolve: ci => ci.Source.CreatedUtc, description: "The date and time of creation");
             Field(ci => ci.Owner).Description("The owner of the content item");
             Field(ci => ci.Author).Description("The author of the content item");
-            Field<IntGraphType>("totalcount");
             Field<StringGraphType, string>()
                 .Name("render")
                 .ResolveLockedAsync(async context =>

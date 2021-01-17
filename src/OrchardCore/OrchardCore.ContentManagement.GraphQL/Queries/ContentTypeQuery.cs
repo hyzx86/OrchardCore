@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Types;
+using GraphQL.Types.Relay;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -61,7 +62,8 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                 {
                     Name = typeDefinition.Name,
                     Description = S["Represents a {0}.", typeDefinition.DisplayName],
-                    ResolvedType = new ListGraphType(typeType)
+                    //UNDONE: how to get new ConnectionType from typeType?
+                    ResolvedType =  new ConnectionType<ContentItemType>()
                 };
 
                 query.RequirePermission(CommonPermissions.ViewContent, typeDefinition.Name);
