@@ -229,7 +229,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
 
         private static IQuery<ContentItem, ContentItemIndex> FilterContentType(IQuery<ContentItem, ContentItemIndex> query, ResolveFieldContext context)
         {
-            var contentType = ((ListGraphType)context.ReturnType).ResolvedType.Name;
+            var contentType = context.FieldName;
 
             return query.Where(q => q.ContentType == contentType);
         }
