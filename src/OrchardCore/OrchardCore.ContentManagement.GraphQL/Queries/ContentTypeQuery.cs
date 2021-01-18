@@ -52,18 +52,23 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
 
             foreach (var typeDefinition in contentDefinitionManager.ListTypeDefinitions())
             {
+
                 var typeType = new ContentItemType(_contentOptionsAccessor)
                 {
                     Name = typeDefinition.Name,
                     Description = S["Represents a {0}.", typeDefinition.DisplayName]
-                };
-
+                }; 
                 var query = new ContentItemsFieldType(typeDefinition.Name, schema, _contentOptionsAccessor, _settingsAccessor)
                 {
                     Name = typeDefinition.Name,
                     Description = S["Represents a {0}.", typeDefinition.DisplayName],
                     //UNDONE: how to get new ConnectionType from typeType?
-                    ResolvedType =  new ConnectionType<ContentItemType>()
+
+                    ResolvedType = new ConnectionType<ContentItemType>()
+                    {
+                        Name = typeDefinition.Name,
+                        Description = S["Represents a {0}.", typeDefinition.DisplayName]                        
+                    }
                 };
 
                 query.RequirePermission(CommonPermissions.ViewContent, typeDefinition.Name);

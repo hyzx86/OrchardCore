@@ -113,10 +113,12 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             //UNDONE:what is the endCursor and cursor? how to set it?
             //var endCursor = contentItems?.Last()?.ContentItemId; 
             //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null;
+
+
             return new Connection<ContentItem>()
             {
                 Edges = contentItems.Select(x => new Edge<ContentItem> { Cursor = x.ContentItemId, Node = x }).ToList(),
-                TotalCount = totalCount   
+                TotalCount = totalCount
             };
         }
 
@@ -229,7 +231,9 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
 
         private static IQuery<ContentItem, ContentItemIndex> FilterContentType(IQuery<ContentItem, ContentItemIndex> query, ResolveFieldContext context)
         {
-            var contentType = context.FieldName;
+            var connectionType = (ConnectionType<ContentItemType>)context.ReturnType;
+   
+            var contentType = connectionType.Name;
 
             return query.Where(q => q.ContentType == contentType);
         }
