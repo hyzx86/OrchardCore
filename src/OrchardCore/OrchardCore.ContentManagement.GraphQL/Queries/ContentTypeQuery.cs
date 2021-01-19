@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL.Types;
 using GraphQL.Types.Relay;
+using GraphQL.Types.Relay.DataObjects;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -57,18 +59,20 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                 {
                     Name = typeDefinition.Name,
                     Description = S["Represents a {0}.", typeDefinition.DisplayName]
-                }; 
+                };
+
+                typeType.Connection<ContentItemType>();
                 var query = new ContentItemsFieldType(typeDefinition.Name, schema, _contentOptionsAccessor, _settingsAccessor)
                 {
                     Name = typeDefinition.Name,
                     Description = S["Represents a {0}.", typeDefinition.DisplayName],
-                    //UNDONE: how to get new ConnectionType from typeType?
-
+                    //UNDONE: how to get new ConnectionType from typeType? 
                     ResolvedType = new ConnectionType<ContentItemType>()
                     {
                         Name = typeDefinition.Name,
-                        Description = S["Represents a {0}.", typeDefinition.DisplayName]                        
-                    }
+                        Description = S["Represents a {0}.", typeDefinition.DisplayName]  
+                    },
+                    //ResolvedType = typeType
                 };
 
                 query.RequirePermission(CommonPermissions.ViewContent, typeDefinition.Name);
@@ -77,6 +81,16 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                 {
                     builder.Build(query, typeDefinition, typeType);
                 }
+
+
+                //typeType.Connection<ContentItemType>().Name(typeType.Name+"Connection")
+                //    .Resolve(args => new Connection<ContentItem>
+                //    {
+                //        //Edges= args.Page(args.s,
+                //        TotalCount= args.TotalCount.HasValue? args.TotalCount.Value:0,
+                        
+
+                //    });
 
                 var settings = typeDefinition.GetSettings<ContentTypeSettings>();
 

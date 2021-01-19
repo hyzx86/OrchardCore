@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using GraphQL.Relay.Types;
 using GraphQL.Types;
 using GraphQL.Types.Relay;
 using GraphQL.Types.Relay.DataObjects;
@@ -126,19 +127,21 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             {
                 contentItems = await filter.PostQueryAsync(contentItems, context);
             }
-            
-                       return new Connection<ContentItem>()
+
+
+            return new Connection<ContentItem>()
             {
+
+                TotalCount = totalCount,
                 Edges = contentItems.Select(x => new Edge<ContentItem> { Cursor = x.ContentItemId, Node = x }).ToList(),
                 PageInfo = new PageInfo
                 {
                     HasNextPage = totalCount > first + skip,
                     HasPreviousPage = first > 0
                     //UNDONE:what about endCursor and cursor use for ? 
-		 			//var endCursor = contentItems?.Last()?.ContentItemId; 
-		            //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null; 
-                },
-                TotalCount = totalCount
+                    //var endCursor = contentItems?.Last()?.ContentItemId; 
+                    //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null; 
+                }
             };
         }
 

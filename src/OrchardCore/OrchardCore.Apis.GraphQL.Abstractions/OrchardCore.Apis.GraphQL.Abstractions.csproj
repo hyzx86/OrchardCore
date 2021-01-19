@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="GraphQL" />
+    <PackageReference Include="GraphQL.Relay" Version="0.5.0" />
   </ItemGroup>
 
   <ItemGroup>
