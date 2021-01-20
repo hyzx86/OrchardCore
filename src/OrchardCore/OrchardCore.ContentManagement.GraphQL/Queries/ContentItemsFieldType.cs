@@ -101,8 +101,24 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             query = OrderBy(query, context);
 
             var contentItemsQuery = await FilterWhereArguments(query, where, context, session, graphContext);
+
+            #region PageQuery
             var totalCount = await contentItemsQuery.CountAsync();
-            contentItemsQuery = PageQuery(contentItemsQuery, context, graphContext);
+            var first = context.GetArgument<int>("first");
+
+            if (first == 0)
+            {
+                first = _defaultNumberOfItems;
+            }
+            contentItemsQuery = contentItemsQuery.Take(first);
+            int skip = 0;
+            if (context.HasPopulatedArgument("skip"))
+            {
+                skip = context.GetArgument<int>("skip");
+
+                contentItemsQuery = contentItemsQuery.Skip(skip);
+            }
+            #endregion
 
             var contentItems = await contentItemsQuery.ListAsync();
 
@@ -110,14 +126,18 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             {
                 contentItems = await filter.PostQueryAsync(contentItems, context);
             }
-            //UNDONE:what is the endCursor and cursor? how to set it?
-            //var endCursor = contentItems?.Last()?.ContentItemId; 
-            //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null;
-
-
-            return new Connection<ContentItem>()
+            
+                       return new Connection<ContentItem>()
             {
                 Edges = contentItems.Select(x => new Edge<ContentItem> { Cursor = x.ContentItemId, Node = x }).ToList(),
+                PageInfo = new PageInfo
+                {
+                    HasNextPage = totalCount > first + skip,
+                    HasPreviousPage = first > 0
+                    //UNDONE:what about endCursor and cursor use for ? 
+		 			//var endCursor = contentItems?.Last()?.ContentItemId; 
+		            //var cursor = contentItems.Count() > 0 ? contentItems.Last()?.ContentItemId : null; 
+                },
                 TotalCount = totalCount
             };
         }
@@ -196,27 +216,6 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             return contentQuery;
         }
 
-        private IQuery<ContentItem> PageQuery(IQuery<ContentItem> contentItemsQuery, ResolveFieldContext context, GraphQLContext graphQLContext)
-        {
-            var first = context.GetArgument<int>("first");
-
-            if (first == 0)
-            {
-                first = _defaultNumberOfItems;
-            }
-
-            contentItemsQuery = contentItemsQuery.Take(first);
-
-            if (context.HasPopulatedArgument("skip"))
-            {
-                var skip = context.GetArgument<int>("skip");
-
-                contentItemsQuery = contentItemsQuery.Skip(skip);
-            }
-
-            return contentItemsQuery;
-        }
-
         private VersionOptions GetVersionOption(PublicationStatusEnum status)
         {
             switch (status)
@@ -232,7 +231,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
         private static IQuery<ContentItem, ContentItemIndex> FilterContentType(IQuery<ContentItem, ContentItemIndex> query, ResolveFieldContext context)
         {
             var connectionType = (ConnectionType<ContentItemType>)context.ReturnType;
-   
+
             var contentType = connectionType.Name;
 
             return query.Where(q => q.ContentType == contentType);
