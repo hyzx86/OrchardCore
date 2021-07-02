@@ -1,8 +1,0 @@
-[submodule "src/OrchardCore.Modules/Orchard-Training-Demo-Module"]
-	path = src/OrchardCore.Modules/Orchard-Training-Demo-Module
-	url = https://gitee.com/OrchardCore/Orchard-Training-Demo-Module.git
-	branch = dev-cn
-[submodule "src/OrchardCore.Modules/Lombiq.VueJs"]
-	path = src/OrchardCore.Modules/Lombiq.VueJs
-	url = https://github.com/Lombiq/Orchard-Vue.js.git
-	branch = dev
