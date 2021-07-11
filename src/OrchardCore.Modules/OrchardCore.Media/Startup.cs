@@ -18,6 +18,7 @@ using OrchardCore.ContentTypes.Editors;
 using OrchardCore.Data.Migration;
 using OrchardCore.Deployment;
 using OrchardCore.DisplayManagement.Handlers;
+using OrchardCore.DisplayManagement.Liquid.Tags;
 using OrchardCore.Environment.Shell;
 using OrchardCore.FileStorage;
 using OrchardCore.FileStorage.FileSystem;
@@ -30,6 +31,7 @@ using OrchardCore.Media.Events;
 using OrchardCore.Media.Fields;
 using OrchardCore.Media.Filters;
 using OrchardCore.Media.Handlers;
+using OrchardCore.Media.Liquid;
 using OrchardCore.Media.Processing;
 using OrchardCore.Media.Recipes;
 using OrchardCore.Media.Services;
@@ -59,13 +61,20 @@ namespace OrchardCore.Media
             _adminOptions = adminOptions.Value;
         }
 
-        static Startup()
-        {
-            TemplateContext.GlobalMemberAccessStrategy.Register<DisplayMediaFieldViewModel>();
-        }
-
         public override void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IAnchorTag, MediaAnchorTag>();
+
+            services.Configure<TemplateOptions>(o =>
+            {
+                o.MemberAccessStrategy.Register<DisplayMediaFieldViewModel>();
+                o.MemberAccessStrategy.Register<Anchor>();
+
+                o.Filters.AddFilter("img_tag", MediaFilters.ImgTag);
+            })
+            .AddLiquidFilter<AssetUrlFilter>("asset_url")
+            .AddLiquidFilter<ResizeUrlFilter>("resize_url");
+
             services.AddTransient<IConfigureOptions<MediaOptions>, MediaOptionsConfiguration>();
 
             services.AddSingleton<IMediaFileProvider>(serviceProvider =>
@@ -116,10 +125,6 @@ namespace OrchardCore.Media
             services.AddScoped<IAuthorizationHandler, AttachedMediaFieldsFolderAuthorizationHandler>();
             services.AddScoped<INavigationProvider, AdminMenu>();
 
-            services.AddLiquidFilter<MediaUrlFilter>("asset_url");
-            services.AddLiquidFilter<ResizeUrlFilter>("resize_url");
-            services.AddLiquidFilter<ImageTagFilter>("img_tag");
-
             // ImageSharp
 
             // Add ImageSharp Configuration first, to override ImageSharp defaults.
@@ -128,7 +133,14 @@ namespace OrchardCore.Media
             services.AddImageSharp()
                 .RemoveProvider<PhysicalFileSystemProvider>()
                 .AddProvider<MediaResizingFileProvider>()
-                .AddProcessor<ImageVersionProcessor>();
+                .AddProcessor<ImageVersionProcessor>()
+                .AddProcessor<TokenCommandProcessor>();
+
+            services.AddScoped<MediaTokenSettingsUpdater>();
+            services.AddScoped<IMediaTokenService, MediaTokenService>();
+            services.AddTransient<IConfigureOptions<MediaTokenOptions>, MediaTokenOptionsConfiguration>();
+            services.AddScoped<IFeatureEventHandler>(sp => sp.GetRequiredService<MediaTokenSettingsUpdater>());
+            services.AddScoped<IModularTenantEvents>(sp => sp.GetRequiredService<MediaTokenSettingsUpdater>());
 
             // Media Field
             services.AddContentField<MediaField>()
@@ -147,6 +159,14 @@ namespace OrchardCore.Media
             services.AddTagHelpers<ImageTagHelper>();
             services.AddTagHelpers<ImageResizeTagHelper>();
             services.AddTagHelpers<AnchorTagHelper>();
+
+            // Media Profiles
+            services.AddScoped<MediaProfilesManager>();
+            services.AddScoped<IMediaProfileService, MediaProfileService>();
+            services.AddRecipeExecutionStep<MediaProfileStep>();
+
+            // Media Name Normalizer
+            services.AddScoped<IMediaNameNormalizerService, NullMediaNameNormalizerService>();
         }
 
         public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -271,6 +291,43 @@ namespace OrchardCore.Media
                 pattern: _adminOptions.AdminUrlPrefix + "/MediaCache/Purge",
                 defaults: new { controller = mediaCacheControllerName, action = nameof(MediaCacheController.Purge) }
             );
+
+            routes.MapAreaControllerRoute(
+                name: "Media.Options",
+                areaName: "OrchardCore.Media",
+                pattern: _adminOptions.AdminUrlPrefix + "/Media/Options",
+                defaults: new { controller = adminControllerName, action = nameof(AdminController.Options) }
+            );
+
+            var mediaProfilesControllerName = typeof(MediaProfilesController).ControllerName();
+
+            routes.MapAreaControllerRoute(
+                name: "MediaProfiles.Index",
+                areaName: "OrchardCore.Media",
+                pattern: _adminOptions.AdminUrlPrefix + "/MediaProfiles",
+                defaults: new { controller = mediaProfilesControllerName, action = nameof(MediaProfilesController.Index) }
+            );
+
+            routes.MapAreaControllerRoute(
+                name: "MediaProfiles.Create",
+                areaName: "OrchardCore.Media",
+                pattern: _adminOptions.AdminUrlPrefix + "/MediaProfiles/Create",
+                defaults: new { controller = mediaProfilesControllerName, action = nameof(MediaProfilesController.Create) }
+            );
+
+            routes.MapAreaControllerRoute(
+                name: "MediaProfiles.Edit",
+                areaName: "OrchardCore.Media",
+                pattern: _adminOptions.AdminUrlPrefix + "/MediaProfiles/Edit",
+                defaults: new { controller = mediaProfilesControllerName, action = nameof(MediaProfilesController.Edit) }
+            );
+
+            routes.MapAreaControllerRoute(
+                name: "MediaProfiles.Delete",
+                areaName: "OrchardCore.Media",
+                pattern: _adminOptions.AdminUrlPrefix + "/MediaProfiles/Delete",
+                defaults: new { controller = mediaProfilesControllerName, action = nameof(MediaProfilesController.Delete) }
+            );
         }
 
         private string GetMediaPath(ShellOptions shellOptions, ShellSettings shellSettings, string assetsPath)
@@ -289,6 +346,16 @@ namespace OrchardCore.Media
         }
     }
 
+    [Feature("OrchardCore.Media.Slugify")]
+    public class MediaSlugifyStartup : StartupBase
+    {
+        public override void ConfigureServices(IServiceCollection services)
+        {
+            // Media Name Normalizer
+            services.AddScoped<IMediaNameNormalizerService, SlugifyMediaNameNormalizerService>();
+        }
+    }
+
     [RequireFeatures("OrchardCore.Deployment")]
     public class DeploymentStartup : StartupBase
     {
@@ -297,6 +364,10 @@ namespace OrchardCore.Media
             services.AddTransient<IDeploymentSource, MediaDeploymentSource>();
             services.AddSingleton<IDeploymentStepFactory>(new DeploymentStepFactory<MediaDeploymentStep>());
             services.AddScoped<IDisplayDriver<DeploymentStep>, MediaDeploymentStepDriver>();
+
+            services.AddTransient<IDeploymentSource, AllMediaProfilesDeploymentSource>();
+            services.AddSingleton<IDeploymentStepFactory>(new DeploymentStepFactory<AllMediaProfilesDeploymentStep>());
+            services.AddScoped<IDisplayDriver<DeploymentStep>, AllMediaProfilesDeploymentStepDriver>();
         }
     }
 

@@ -12,6 +12,7 @@ namespace OrchardCore.Contents.Security
     public class ContentTypeAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {
         private readonly IServiceProvider _serviceProvider;
+        private IAuthorizationService _authorizationService;
 
         public ContentTypeAuthorizationHandler(IServiceProvider serviceProvider)
         {
@@ -38,19 +39,11 @@ namespace OrchardCore.Contents.Security
 
             if (contentItem != null)
             {
-                if (contentItem.Owner != null) // If we want to evaluate a specific content item authorization
+                var ownerVariation = GetOwnerVariation(requirement.Permission);
+
+                if (OwnerVariationExists(requirement.Permission) && HasOwnership(context.User, contentItem))
                 {
-                    if (OwnerVariationExists(requirement.Permission) && HasOwnership(context.User, contentItem))
-                    {
-                        permission = GetOwnerVariation(requirement.Permission);
-                    }
-                }
-                else // If we want to evaluate if a user has authorization on a ContentType globally
-                {
-                    if (OwnerVariationExists(requirement.Permission))
-                    {
-                        permission = GetOwnerVariation(requirement.Permission);
-                    }
+                    permission = ownerVariation;
                 }
             }
 
@@ -61,7 +54,7 @@ namespace OrchardCore.Contents.Security
                 // The resource can be a content type name
                 var contentType = contentItem != null
                     ? contentItem.ContentType
-                    : Convert.ToString(context.Resource.ToString())
+                    : context.Resource.ToString()
                     ;
 
                 if (!String.IsNullOrEmpty(contentType))
@@ -76,9 +69,9 @@ namespace OrchardCore.Contents.Security
             }
 
             // Lazy load to prevent circular dependencies
-            var authorizationService = _serviceProvider.GetService<IAuthorizationService>();
+            _authorizationService ??= _serviceProvider.GetService<IAuthorizationService>();
 
-            if (await authorizationService.AuthorizeAsync(context.User, permission))
+            if (await _authorizationService.AuthorizeAsync(context.User, permission))
             {
                 context.Succeed(requirement);
             }
@@ -86,34 +79,9 @@ namespace OrchardCore.Contents.Security
 
         private static Permission GetOwnerVariation(Permission permission)
         {
-            if (permission.Name == Permissions.PublishContent.Name)
+            if (CommonPermissions.OwnerPermissionsByName.TryGetValue(permission.Name, out var ownerVariation))
             {
-                return Permissions.PublishOwnContent;
-            }
-
-            if (permission.Name == Permissions.EditContent.Name)
-            {
-                return Permissions.EditOwnContent;
-            }
-
-            if (permission.Name == Permissions.DeleteContent.Name)
-            {
-                return Permissions.DeleteOwnContent;
-            }
-
-            if (permission.Name == Permissions.ViewContent.Name)
-            {
-                return Permissions.ViewOwnContent;
-            }
-
-            if (permission.Name == Permissions.PreviewContent.Name)
-            {
-                return Permissions.PreviewOwnContent;
-            }
-
-            if (permission.Name == Permissions.CloneContent.Name)
-            {
-                return Permissions.CloneOwnContent;
+                return ownerVariation;
             }
 
             return null;
@@ -126,7 +94,7 @@ namespace OrchardCore.Contents.Security
                 return false;
             }
 
-            return user.Identity.Name == content.Owner;
+            return user.FindFirstValue(ClaimTypes.NameIdentifier) == content.Owner;
         }
 
         private static bool OwnerVariationExists(Permission permission)

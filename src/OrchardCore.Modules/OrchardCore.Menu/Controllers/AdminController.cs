@@ -137,7 +137,7 @@ namespace OrchardCore.Menu.Controllers
 
             await _contentManager.SaveDraftAsync(menu);
 
-            return RedirectToAction("Edit", "Admin", new { area = "OrchardCore.Contents", contentItemId = menuContentItemId });
+            return RedirectToAction(nameof(Edit), "Admin", new { area = "OrchardCore.Contents", contentItemId = menuContentItemId });
         }
 
         public async Task<IActionResult> Edit(string menuContentItemId, string menuItemId)
@@ -209,7 +209,12 @@ namespace OrchardCore.Menu.Controllers
                 return NotFound();
             }
 
-            var contentItem = menuItem.ToObject<ContentItem>();
+            var existing = menuItem.ToObject<ContentItem>();
+
+            // Create a new item to take into account the current type definition.
+            var contentItem = await _contentManager.NewAsync(existing.ContentType);
+
+            contentItem.Merge(existing);
 
             dynamic model = await _contentItemDisplayManager.UpdateEditorAsync(contentItem, _updateModelAccessor.ModelUpdater, false);
 
@@ -227,9 +232,12 @@ namespace OrchardCore.Menu.Controllers
                 MergeNullValueHandling = MergeNullValueHandling.Merge
             });
 
+            // Merge doesn't copy the properties
+            menuItem[nameof(ContentItem.DisplayText)] = contentItem.DisplayText;
+
             await _contentManager.SaveDraftAsync(menu);
 
-            return RedirectToAction("Edit", "Admin", new { area = "OrchardCore.Contents", contentItemId = menuContentItemId });
+            return RedirectToAction(nameof(Edit), "Admin", new { area = "OrchardCore.Contents", contentItemId = menuContentItemId });
         }
 
         [HttpPost]
@@ -271,9 +279,9 @@ namespace OrchardCore.Menu.Controllers
 
             await _contentManager.SaveDraftAsync(menu);
 
-            _notifier.Success(H["Menu item deleted successfully"]);
+            _notifier.Success(H["Menu item deleted successfully."]);
 
-            return RedirectToAction("Edit", "Admin", new { area = "OrchardCore.Contents", contentItemId = menuContentItemId });
+            return RedirectToAction(nameof(Edit), "Admin", new { area = "OrchardCore.Contents", contentItemId = menuContentItemId });
         }
 
         private JObject FindMenuItem(JObject contentItem, string menuItemId)

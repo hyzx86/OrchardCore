@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Localization;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using OrchardCore.Environment.Shell;
@@ -24,6 +23,8 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OrchardCore.OpenId.Controllers
 {
+    // Note: the error descriptions used in this controller are deliberately not localized as
+    // the OAuth 2.0 specification only allows select US-ASCII characters in error_description.
     [Authorize, Feature(OpenIdConstants.Features.Server)]
     public class AccessController : Controller
     {
@@ -31,16 +32,13 @@ namespace OrchardCore.OpenId.Controllers
         private readonly IOpenIdAuthorizationManager _authorizationManager;
         private readonly IOpenIdScopeManager _scopeManager;
         private readonly ShellSettings _shellSettings;
-        private readonly IStringLocalizer S;
 
         public AccessController(
             IOpenIdApplicationManager applicationManager,
             IOpenIdAuthorizationManager authorizationManager,
-            IStringLocalizer<AccessController> localizer,
             IOpenIdScopeManager scopeManager,
             ShellSettings shellSettings)
         {
-            S = localizer;
             _applicationManager = applicationManager;
             _authorizationManager = authorizationManager;
             _scopeManager = scopeManager;
@@ -87,10 +85,10 @@ namespace OrchardCore.OpenId.Controllers
 
             var authorizations = await _authorizationManager.FindAsync(
                 subject: result.Principal.GetUserIdentifier(),
-                client : await _applicationManager.GetIdAsync(application),
-                status : Statuses.Valid,
-                type   : AuthorizationTypes.Permanent,
-                scopes : request.GetScopes()).ToListAsync();
+                client: await _applicationManager.GetIdAsync(application),
+                status: Statuses.Valid,
+                type: AuthorizationTypes.Permanent,
+                scopes: request.GetScopes()).ToListAsync();
 
             switch (await _applicationManager.GetConsentTypeAsync(application))
             {
@@ -99,7 +97,7 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            S["The logged in user is not allowed to access this client application."]
+                            "The logged in user is not allowed to access this client application."
                     }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
                 case ConsentTypes.Implicit:
@@ -118,6 +116,10 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         identity.AddClaim(new Claim(Claims.Subject, result.Principal.GetUserIdentifier()));
                     }
+                    if (string.IsNullOrEmpty(result.Principal.FindFirst(Claims.Name)?.Value))
+                    {
+                        identity.AddClaim(new Claim(Claims.Name, result.Principal.GetUserName()));
+                    }
 
                     principal.SetScopes(request.GetScopes());
                     principal.SetResources(await GetResourcesAsync(request.GetScopes()));
@@ -129,10 +131,10 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         authorization = await _authorizationManager.CreateAsync(
                             principal: principal,
-                            subject  : principal.GetUserIdentifier(),
-                            client   : await _applicationManager.GetIdAsync(application),
-                            type     : AuthorizationTypes.Permanent,
-                            scopes   : principal.GetScopes());
+                            subject: principal.GetUserIdentifier(),
+                            client: await _applicationManager.GetIdAsync(application),
+                            type: AuthorizationTypes.Permanent,
+                            scopes: principal.GetScopes());
                     }
 
                     principal.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
@@ -149,7 +151,7 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            S["Interactive user consent is required."]
+                            "Interactive user consent is required."
                     }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
                 default:
@@ -170,8 +172,7 @@ namespace OrchardCore.OpenId.Controllers
                     return Forbid(new AuthenticationProperties(new Dictionary<string, string>
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.LoginRequired,
-                        [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            S["The user is not logged in."]
+                        [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The user is not logged in."
                     }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
                 }
 
@@ -221,10 +222,10 @@ namespace OrchardCore.OpenId.Controllers
 
             var authorizations = await _authorizationManager.FindAsync(
                 subject: User.GetUserIdentifier(),
-                client : await _applicationManager.GetIdAsync(application),
-                status : Statuses.Valid,
-                type   : AuthorizationTypes.Permanent,
-                scopes : request.GetScopes()).ToListAsync();
+                client: await _applicationManager.GetIdAsync(application),
+                status: Statuses.Valid,
+                type: AuthorizationTypes.Permanent,
+                scopes: request.GetScopes()).ToListAsync();
 
             // Note: the same check is already made in the GET action but is repeated
             // here to ensure a malicious user can't abuse this POST endpoint and
@@ -236,7 +237,7 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            S["The logged in user is not allowed to access this client application."]
+                            "The logged in user is not allowed to access this client application."
                     }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
                 default:
@@ -253,6 +254,10 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         identity.AddClaim(new Claim(Claims.Subject, User.GetUserIdentifier()));
                     }
+                    if (string.IsNullOrEmpty(User.FindFirst(Claims.Name)?.Value))
+                    {
+                        identity.AddClaim(new Claim(Claims.Name, User.GetUserName()));
+                    }
 
                     principal.SetScopes(request.GetScopes());
                     principal.SetResources(await GetResourcesAsync(request.GetScopes()));
@@ -264,10 +269,10 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         authorization = await _authorizationManager.CreateAsync(
                             principal: principal,
-                            subject  : principal.GetUserIdentifier(),
-                            client   : await _applicationManager.GetIdAsync(application),
-                            type     : AuthorizationTypes.Permanent,
-                            scopes   : principal.GetScopes());
+                            subject: principal.GetUserIdentifier(),
+                            client: await _applicationManager.GetIdAsync(application),
+                            type: AuthorizationTypes.Permanent,
+                            scopes: principal.GetScopes());
                     }
 
                     principal.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
@@ -403,7 +408,7 @@ namespace OrchardCore.OpenId.Controllers
         [AllowAnonymous, HttpPost]
         [IgnoreAntiforgeryToken]
         [Produces("application/json")]
-        public async Task<IActionResult> Token()
+        public Task<IActionResult> Token()
         {
             // Warning: this action is decorated with IgnoreAntiforgeryTokenAttribute to override
             // the global antiforgery token validation policy applied by the MVC modules stack,
@@ -414,22 +419,22 @@ namespace OrchardCore.OpenId.Controllers
             var request = HttpContext.GetOpenIddictServerRequest();
             if (request == null)
             {
-                return NotFound();
+                return Task.FromResult((IActionResult)NotFound());
             }
 
             if (request.IsPasswordGrantType())
             {
-                return await ExchangePasswordGrantType(request);
+                return ExchangePasswordGrantType(request);
             }
 
             if (request.IsClientCredentialsGrantType())
             {
-                return await ExchangeClientCredentialsGrantType(request);
+                return ExchangeClientCredentialsGrantType(request);
             }
 
             if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType())
             {
-                return await ExchangeAuthorizationCodeOrRefreshTokenGrantType(request);
+                return ExchangeAuthorizationCodeOrRefreshTokenGrantType(request);
             }
 
             throw new NotSupportedException("The specified grant type is not supported.");
@@ -493,7 +498,7 @@ namespace OrchardCore.OpenId.Controllers
                 {
                     [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.UnsupportedGrantType,
                     [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                        S["The resource owner password credentials grant is not supported."]
+                        "The resource owner password credentials grant is not supported."
                 }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
@@ -512,10 +517,10 @@ namespace OrchardCore.OpenId.Controllers
 
             var authorizations = await _authorizationManager.FindAsync(
                 subject: principal.GetUserIdentifier(),
-                client : await _applicationManager.GetIdAsync(application),
-                status : Statuses.Valid,
-                type   : AuthorizationTypes.Permanent,
-                scopes : request.GetScopes()).ToListAsync();
+                client: await _applicationManager.GetIdAsync(application),
+                status: Statuses.Valid,
+                type: AuthorizationTypes.Permanent,
+                scopes: request.GetScopes()).ToListAsync();
 
             // If the application is configured to use external consent,
             // reject the request if no existing authorization can be found.
@@ -526,11 +531,11 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            S["The logged in user is not allowed to access this client application."]
+                            "The logged in user is not allowed to access this client application."
                     }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
-            var identity = (ClaimsIdentity) principal.Identity;
+            var identity = (ClaimsIdentity)principal.Identity;
 
             identity.AddClaim(OpenIdConstants.Claims.EntityType, OpenIdConstants.EntityTypes.User,
                 Destinations.AccessToken, Destinations.IdentityToken);
@@ -542,6 +547,10 @@ namespace OrchardCore.OpenId.Controllers
             {
                 identity.AddClaim(new Claim(Claims.Subject, principal.GetUserIdentifier()));
             }
+            if (string.IsNullOrEmpty(principal.FindFirst(Claims.Name)?.Value))
+            {
+                identity.AddClaim(new Claim(Claims.Name, principal.GetUserName()));
+            }
 
             principal.SetScopes(request.GetScopes());
             principal.SetResources(await GetResourcesAsync(request.GetScopes()));
@@ -552,11 +561,11 @@ namespace OrchardCore.OpenId.Controllers
             if (authorization == null)
             {
                 authorization = await _authorizationManager.CreateAsync(
-                    principal : principal,
-                    subject   : principal.GetUserIdentifier(),
-                    client    : await _applicationManager.GetIdAsync(application),
-                    type      : AuthorizationTypes.Permanent,
-                    scopes    : principal.GetScopes());
+                    principal: principal,
+                    subject: principal.GetUserIdentifier(),
+                    client: await _applicationManager.GetIdAsync(application),
+                    type: AuthorizationTypes.Permanent,
+                    scopes: principal.GetScopes());
             }
 
             principal.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
@@ -571,9 +580,6 @@ namespace OrchardCore.OpenId.Controllers
 
         private async Task<IActionResult> ExchangeAuthorizationCodeOrRefreshTokenGrantType(OpenIddictRequest request)
         {
-            var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
-                throw new InvalidOperationException("The application details cannot be found.");
-
             // Retrieve the claims principal stored in the authorization code/refresh token.
             var info = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme) ??
                 throw new InvalidOperationException("The user principal cannot be resolved.");
@@ -587,8 +593,7 @@ namespace OrchardCore.OpenId.Controllers
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.UnauthorizedClient,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            S["The refresh token grant type is not allowed for refresh " +
-                              "tokens retrieved using the client credentials flow."]
+                            "The refresh token grant type is not allowed for refresh tokens retrieved using the client credentials flow."
                     }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
                 }
             }
@@ -608,7 +613,7 @@ namespace OrchardCore.OpenId.Controllers
                 }
             }
 
-            var identity = (ClaimsIdentity) principal.Identity;
+            var identity = (ClaimsIdentity)principal.Identity;
 
             identity.AddClaim(OpenIdConstants.Claims.EntityType, OpenIdConstants.EntityTypes.User,
                 Destinations.AccessToken, Destinations.IdentityToken);
@@ -619,6 +624,10 @@ namespace OrchardCore.OpenId.Controllers
             if (string.IsNullOrEmpty(principal.FindFirst(Claims.Subject)?.Value))
             {
                 identity.AddClaim(new Claim(Claims.Subject, principal.GetUserIdentifier()));
+            }
+            if (string.IsNullOrEmpty(principal.FindFirst(Claims.Name)?.Value))
+            {
+                identity.AddClaim(new Claim(Claims.Name, principal.GetUserName()));
             }
 
             foreach (var claim in principal.Claims)
@@ -644,9 +653,9 @@ namespace OrchardCore.OpenId.Controllers
                 // Only add the claim to the id_token if the corresponding scope was granted.
                 // The other claims will only be added to the access_token.
                 case OpenIdConstants.Claims.EntityType:
-                case Claims.Name  when principal.HasScope(Scopes.Profile):
+                case Claims.Name when principal.HasScope(Scopes.Profile):
                 case Claims.Email when principal.HasScope(Scopes.Email):
-                case Claims.Role  when principal.HasScope(Scopes.Roles):
+                case Claims.Role when principal.HasScope(Scopes.Roles):
                     yield return Destinations.AccessToken;
                     yield return Destinations.IdentityToken;
                     break;

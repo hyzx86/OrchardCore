@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using OrchardCore.ContentManagement;
 using OrchardCore.ContentManagement.Display.ContentDisplay;
 using OrchardCore.ContentPreview.Drivers;
@@ -10,7 +11,6 @@ using OrchardCore.ContentPreview.Settings;
 using OrchardCore.ContentTypes.Editors;
 using OrchardCore.Data.Migration;
 using OrchardCore.ResourceManagement;
-using OrchardCore.Security.Permissions;
 
 namespace OrchardCore.ContentPreview
 {
@@ -18,10 +18,9 @@ namespace OrchardCore.ContentPreview
     {
         public override void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IResourceManifestProvider, ResourceManifest>();
+            services.AddTransient<IConfigureOptions<ResourceManagementOptions>, ResourceManagementOptionsConfiguration>();
 
             services.AddScoped<IContentDisplayDriver, ContentPreviewDriver>();
-            services.AddScoped<IPermissionProvider, Permissions>();
 
             // Preview Part
             services.AddContentPart<PreviewPart>()

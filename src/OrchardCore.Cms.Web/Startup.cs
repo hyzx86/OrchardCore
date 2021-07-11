@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -9,30 +8,11 @@ namespace OrchardCore.Cms.Web
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOrchardCms();
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequiredUniqueChars = 3;
-                options.Password.RequiredLength = 6; 
-            });
-            //配置跨域处理，允许所有来源：
-            services.AddCors(options =>
-            {
-                options.AddPolicy("CorsPolicy",
-                    builder => builder.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
-            });
+            services.AddOrchardCms().AddSetupFeatures("OrchardCore.AutoSetup");
         }
 
         public void Configure(IApplicationBuilder app, IHostEnvironment env)
         {
-            app.UseCors("CorsPolicy");
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -41,7 +21,6 @@ namespace OrchardCore.Cms.Web
             app.UseStaticFiles();
 
             app.UseOrchardCore();
-
         }
     }
 }

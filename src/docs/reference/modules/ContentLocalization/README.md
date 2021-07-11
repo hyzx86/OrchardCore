@@ -26,7 +26,10 @@ The `ContentCulturePicker` selects the url to redirect using the following rules
 
 ### Localization Cookie
 
-By default, the `ContentCulturePicker` sets a cookie for the `CookieRequestCultureProvider`. This can be disabled in the  `Configuration/Settings/ContentCulturePicker` settings page.
+By default, the `ContentCulturePicker` sets a cookie for the `CookieRequestCultureProvider`. This can be disabled in the  `Configuration/Settings/Localization/Content Culture Picker` settings page.
+
+The `ContentRequestCultureProvider` can set the cookie based on the ContentItem that matches the current url. This setting can be edited in the  `Configuration/Settings/Localization/Content Request Culture Provider` settings page.
+
 
 #### Recipe Step
 
@@ -38,6 +41,9 @@ The cookie can be set during recipes using the settings step. Here is a sample s
   "ContentCulturePickerSettings": {
     "SetCookie": true
   },
+  "ContentRequestCultureProvider": {
+      "SetCookie": true
+  }
 },
 ```
 
@@ -72,7 +78,7 @@ You should override this shape in your theme.
 
 ##### ContentCulturePickerContainer Example
 
-=== "Razor"
+=== "Liquid"
 
     ``` liquid
     <ul>
@@ -110,7 +116,7 @@ You should override this shape in your theme.
             </div>
         </li>
     </ul>
-```
+    ```
 
 ## Liquid filters
 
@@ -144,4 +150,18 @@ Output
 
 ```text
 Title
+```
+
+## Configuration
+
+The following configuration is used by default and can be customized:
+
+```json
+{
+   "OrchardCore": {
+    "OrchardCore_ContentLocalization_CulturePicker": {
+     "CookieLifeTime": 14 // Set the culture picker cookie life time (in days).
+    }
+  }
+}
 ```

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OrchardCore.ContentManagement.Metadata.Models;
+
 using OrchardCore.Security.Permissions;
 
 
@@ -22,6 +23,9 @@ namespace OrchardCore.Contents.Security
         private static readonly Permission ViewOwnContent = new Permission("ViewOwn_{0}", "View own {0}", new[] { ViewContent, CommonPermissions.ViewOwnContent });
         private static readonly Permission PreviewContent = new Permission("Preview_{0}", "Preview {0} by others", new[] { EditContent, CommonPermissions.PreviewContent });
         private static readonly Permission PreviewOwnContent = new Permission("PreviewOwn_{0}", "Preview own {0}", new[] { PreviewContent, CommonPermissions.PreviewOwnContent });
+        private static readonly Permission CloneContent = new Permission("Clone_{0}", "Clone {0} by others", new[] { EditContent, CommonPermissions.CloneContent });
+        private static readonly Permission CloneOwnContent = new Permission("CloneOwn_{0}", "Clone own {0}", new[] { CloneContent, CommonPermissions.CloneOwnContent });
+        private static readonly Permission ListContent = new Permission("ListContent_{0}", "List {0} content item(s) owned by all users", new[] { CommonPermissions.ListContent });
 
         public static readonly Dictionary<string, Permission> PermissionTemplates = new Dictionary<string, Permission>
         {
@@ -34,8 +38,13 @@ namespace OrchardCore.Contents.Security
             { CommonPermissions.ViewContent.Name, ViewContent },
             { CommonPermissions.ViewOwnContent.Name, ViewOwnContent },
             { CommonPermissions.PreviewContent.Name, PreviewContent },
-            { CommonPermissions.PreviewOwnContent.Name, PreviewOwnContent }
+            { CommonPermissions.PreviewOwnContent.Name, PreviewOwnContent },
+            { CommonPermissions.CloneContent.Name, CloneContent },
+            { CommonPermissions.CloneOwnContent.Name, CloneOwnContent },
+            { CommonPermissions.ListContent.Name, ListContent }
         };
+
+        public static Dictionary<ValueTuple<string, string>, Permission> PermissionsByType = new Dictionary<ValueTuple<string, string>, Permission>();
 
         /// <summary>
         /// Returns a dynamic permission for a content type, based on a global content permission template
@@ -58,7 +67,7 @@ namespace OrchardCore.Contents.Security
             return new Permission(
                 String.Format(template.Name, typeDefinition.Name),
                 String.Format(template.Description, typeDefinition.DisplayName),
-                (template.ImpliedBy ?? new Permission[0]).Select(t => CreateDynamicPermission(t, typeDefinition))
+                (template.ImpliedBy ?? Array.Empty<Permission>()).Select(t => CreateDynamicPermission(t, typeDefinition))
             )
             {
                 Category = typeDefinition.DisplayName
@@ -70,11 +79,24 @@ namespace OrchardCore.Contents.Security
         /// </summary>
         public static Permission CreateDynamicPermission(Permission template, string contentType)
         {
-            return new Permission(
+            var key = new ValueTuple<string, string>(template.Name, contentType);
+
+            if (PermissionsByType.TryGetValue(key, out var permission))
+            {
+                return permission;
+            }
+
+            permission = new Permission(
                 String.Format(template.Name, contentType),
                 String.Format(template.Description, contentType),
                 (template.ImpliedBy ?? new Permission[0]).Select(t => CreateDynamicPermission(t, contentType))
             );
+
+            var localPermissions = new Dictionary<ValueTuple<string, string>, Permission>(PermissionsByType);
+            localPermissions[key] = permission;
+            PermissionsByType = localPermissions;
+
+            return permission;
         }
     }
 }

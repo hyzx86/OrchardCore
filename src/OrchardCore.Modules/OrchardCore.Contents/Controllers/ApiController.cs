@@ -7,10 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Newtonsoft.Json.Linq;
 using OrchardCore.ContentManagement;
-using OrchardCore.Contents;
 using OrchardCore.Mvc.Utilities;
 
-namespace OrchardCore.Content.Controllers
+namespace OrchardCore.Contents.Controllers
 {
     [Route("api/content")]
     [ApiController]
@@ -48,7 +47,7 @@ namespace OrchardCore.Content.Controllers
                 return NotFound();
             }
 
-            if (!await _authorizationService.AuthorizeAsync(User, Permissions.ViewContent, contentItem))
+            if (!await _authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, contentItem))
             {
                 return this.ChallengeOrForbid("Api");
             }
@@ -72,7 +71,7 @@ namespace OrchardCore.Content.Controllers
                 return StatusCode(204);
             }
 
-            if (!await _authorizationService.AuthorizeAsync(User, Permissions.DeleteContent, contentItem))
+            if (!await _authorizationService.AuthorizeAsync(User, CommonPermissions.DeleteContent, contentItem))
             {
                 return this.ChallengeOrForbid("Api");
             }
@@ -97,7 +96,7 @@ namespace OrchardCore.Content.Controllers
 
             if (contentItem == null)
             {
-                if (!await _authorizationService.AuthorizeAsync(User, Permissions.PublishContent))
+                if (!await _authorizationService.AuthorizeAsync(User, CommonPermissions.PublishContent))
                 {
                     return this.ChallengeOrForbid("Api");
                 }
@@ -128,7 +127,7 @@ namespace OrchardCore.Content.Controllers
             }
             else
             {
-                if (!await _authorizationService.AuthorizeAsync(User, Permissions.EditContent, contentItem))
+                if (!await _authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, contentItem))
                 {
                     return this.ChallengeOrForbid("Api");
                 }

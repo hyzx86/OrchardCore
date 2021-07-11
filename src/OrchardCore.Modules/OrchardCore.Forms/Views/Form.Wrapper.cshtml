@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Html 
 @using OrchardCore.ContentManagement
 @using OrchardCore.Forms.Models;
 @using OrchardCore.Mvc.Utilities;
@@ -13,10 +14,10 @@
 }
 
 <form id="@formId" action="@formPart.Action" method="@formPart.Method"  enctype="@encType" class="form-content @formContentTypeClassName">
-    @if(formPart.EnableAntiForgeryToken)
+    @if (formPart.EnableAntiForgeryToken)
     {
         @Html.AntiForgeryToken()
     }
 
-    @await DisplayAsync(Model.Metadata.ChildContent)
+    @await DisplayAsync((IHtmlContent)Model.Metadata.ChildContent)
 </form>
