@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
+using OrchardCore.Abstractions.Setup;
 using OrchardCore.Data;
 using OrchardCore.Email;
 using OrchardCore.Environment.Shell;
@@ -37,6 +38,7 @@ namespace OrchardCore.Tenants.Controllers
         private readonly ISetupService _setupService;
         private readonly IClock _clock;
         private readonly IEmailAddressValidator _emailAddressValidator;
+        private readonly IFeatureProfilesService _featureProfilesService;
         private readonly IdentityOptions _identityOptions;
         private readonly IEnumerable<DatabaseProvider> _databaseProviders;
         private readonly IStringLocalizer S;
@@ -50,9 +52,10 @@ namespace OrchardCore.Tenants.Controllers
             ISetupService setupService,
             IClock clock,
             IEmailAddressValidator emailAddressValidator,
+            IFeatureProfilesService featureProfilesService,
             IOptions<IdentityOptions> identityOptions,
             IEnumerable<DatabaseProvider> databaseProviders,
-            IStringLocalizer<AdminController> stringLocalizer)
+            IStringLocalizer<ApiController> stringLocalizer)
         {
             _shellHost = shellHost;
             _currentShellSettings = currentShellSettings;
@@ -62,6 +65,7 @@ namespace OrchardCore.Tenants.Controllers
             _setupService = setupService;
             _clock = clock;
             _emailAddressValidator = emailAddressValidator;
+            _featureProfilesService = featureProfilesService;
             _identityOptions = identityOptions.Value;
             _databaseProviders = databaseProviders;
             S = stringLocalizer;
@@ -99,7 +103,16 @@ namespace OrchardCore.Tenants.Controllers
             shellSettings["DatabaseProvider"] = model.DatabaseProvider;
             shellSettings["Secret"] = Guid.NewGuid().ToString();
             shellSettings["RecipeName"] = model.RecipeName;
+            shellSettings["FeatureProfile"] = model.FeatureProfile;
 
+            if (!String.IsNullOrWhiteSpace(model.FeatureProfile))
+            {
+                var featureProfiles = await _featureProfilesService.GetFeatureProfilesAsync();
+                if (!featureProfiles.ContainsKey(model.FeatureProfile))
+                {
+                    ModelState.AddModelError(nameof(CreateApiViewModel.FeatureProfile), S["The feature profile does not exist.", model.FeatureProfile]);
+                }
+            }
             if (String.IsNullOrWhiteSpace(shellSettings.RequestUrlHost) && String.IsNullOrWhiteSpace(shellSettings.RequestUrlPrefix))
             {
                 ModelState.AddModelError(nameof(CreateApiViewModel.RequestUrlPrefix), S["Host and url prefix can not be empty at the same time."]);
@@ -260,17 +273,20 @@ namespace OrchardCore.Tenants.Controllers
             var setupContext = new SetupContext
             {
                 ShellSettings = shellSettings,
-                SiteName = model.SiteName,
                 EnabledFeatures = null, // default list,
-                AdminUsername = model.UserName,
-                AdminEmail = model.Email,
-                AdminPassword = model.Password,
                 Errors = new Dictionary<string, string>(),
                 Recipe = recipeDescriptor,
-                SiteTimeZone = model.SiteTimeZone,
-                DatabaseProvider = selectedProvider.Value,
-                DatabaseConnectionString = connectionString,
-                DatabaseTablePrefix = tablePrefix
+                Properties = new Dictionary<string, object>
+                {
+                    { SetupConstants.SiteName, model.SiteName },
+                    { SetupConstants.AdminUsername, model.UserName },
+                    { SetupConstants.AdminEmail, model.Email },
+                    { SetupConstants.AdminPassword, model.Password },
+                    { SetupConstants.SiteTimeZone, model.SiteTimeZone },
+                    { SetupConstants.DatabaseProvider, selectedProvider.Value },
+                    { SetupConstants.DatabaseConnectionString, connectionString },
+                    { SetupConstants.DatabaseTablePrefix, tablePrefix },
+                }
             };
 
             var executionId = await _setupService.SetupAsync(setupContext);
@@ -296,27 +312,16 @@ namespace OrchardCore.Tenants.Controllers
 
         private string GetEncodedUrl(ShellSettings shellSettings, string token)
         {
-            var requestHost = Request.Host;
-            var host = shellSettings.RequestUrlHost?.Split(',', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? requestHost.Host;
-
-            var port = requestHost.Port;
-
-            if (port.HasValue)
-            {
-                host += ":" + port;
-            }
-
-            var hostString = new HostString(host);
+            var host = shellSettings.RequestUrlHost?.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            var hostString = host != null ? new HostString(host) : Request.Host;
 
             var pathString = HttpContext.Features.Get<ShellContextFeature>().OriginalPathBase;
-
             if (!String.IsNullOrEmpty(shellSettings.RequestUrlPrefix))
             {
                 pathString = pathString.Add('/' + shellSettings.RequestUrlPrefix);
             }
 
-            QueryString queryString;
-
+            var queryString = QueryString.Empty;
             if (!String.IsNullOrEmpty(token))
             {
                 queryString = QueryString.Create("token", token);

@@ -7,7 +7,7 @@
 @import "../../admin/_navbar.scss";
 
 .ta-navbar-top {
-    @extend .navbar-dark;
+    @extend .navbar-dark !optional;
     color: $gray-300;
 
     a {
@@ -17,7 +17,9 @@
 }
 
 .ta-badge {
-    @extend .badge-dark;
+    @extend .badge-dark !optional;
+
+    background-color: darken(#181a1b, 5%)
 }
 
 .ta-navbar-brand {
@@ -264,3 +266,9 @@
     }
 }
 
+// Cards
+
+.card-header
+{
+    background-color: #1b1e1f;
+}

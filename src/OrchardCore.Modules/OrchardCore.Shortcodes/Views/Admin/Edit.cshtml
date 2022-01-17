@@ -37,7 +37,7 @@
 <zone Name="Title"><h1>@RenderTitleSegments(T["Edit Shortcode"])</h1></zone>
 
 <div asp-validation-summary="All"></div>
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" class="no-multisubmit">
 
     <input type="hidden" value="@Model.Name" name="sourceName" />
 
@@ -114,6 +114,7 @@
             <div class="form-group" asp-validation-class-for="Content">
                 <label asp-for="Content">@T["Content"]</label>
                 <textarea asp-for="Content" rows="10" class="form-control"></textarea>
+                <span asp-validation-for="Content"></span>
                 <span class="hint">@T["The Liquid template."]</span>
             </div>
         </div>    
