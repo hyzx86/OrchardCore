@@ -9,6 +9,8 @@ namespace OrchardCore.Queries.Sql
 {
     public class SqlParser
     {
+        private readonly string _schema;
+
         private StringBuilder _builder;
         private IDictionary<string, object> _parameters;
         private ISqlDialect _dialect;
@@ -27,9 +29,15 @@ namespace OrchardCore.Queries.Sql
         private string _groupBy;
         private string _orderBy;
 
-        private SqlParser(ParseTree tree, ISqlDialect dialect, string tablePrefix, IDictionary<string, object> parameters)
+        private SqlParser(
+            ParseTree tree,
+            string schema,
+            ISqlDialect dialect,
+            string tablePrefix,
+            IDictionary<string, object> parameters)
         {
             _tree = tree;
+            _schema = schema;
             _dialect = dialect;
             _tablePrefix = tablePrefix;
             _parameters = parameters;
@@ -37,7 +45,7 @@ namespace OrchardCore.Queries.Sql
             _modes = new Stack<FormattingModes>();
         }
 
-        public static bool TryParse(string sql, ISqlDialect dialect, string tablePrefix, IDictionary<string, object> parameters, out string query, out IEnumerable<string> messages)
+        public static bool TryParse(string sql, string schema, ISqlDialect dialect, string tablePrefix, IDictionary<string, object> parameters, out string query, out IEnumerable<string> messages)
         {
             try
             {
@@ -55,7 +63,7 @@ namespace OrchardCore.Queries.Sql
                     return false;
                 }
 
-                var sqlParser = new SqlParser(tree, dialect, tablePrefix, parameters);
+                var sqlParser = new SqlParser(tree, schema, dialect, tablePrefix, parameters);
                 query = sqlParser.Evaluate();
 
                 messages = Array.Empty<string>();
@@ -462,7 +470,7 @@ namespace OrchardCore.Queries.Sql
             IList<string> arguments;
             var tempBuilder = _builder;
 
-            if (funCall.ChildNodes[1].ChildNodes.Count == 0) 
+            if (funCall.ChildNodes[1].ChildNodes.Count == 0)
             {
                 arguments = Array.Empty<string>();
             }
@@ -619,7 +627,8 @@ namespace OrchardCore.Queries.Sql
                     {
                         EvaluateFunCall(funCallOrId);
                         var overClauseOpt = columnSource.ChildNodes[1];
-                        if (overClauseOpt.ChildNodes.Count > 0) {
+                        if (overClauseOpt.ChildNodes.Count > 0)
+                        {
                             EvaluateOverClauseOptional(overClauseOpt);
                         }
                     }
@@ -656,7 +665,7 @@ namespace OrchardCore.Queries.Sql
             {
                 if (i == 0 && id.ChildNodes.Count > 1 && !_aliases.Contains(id.ChildNodes[i].Token.ValueString))
                 {
-                    _builder.Append(_dialect.QuoteForTableName(_tablePrefix + id.ChildNodes[i].Token.ValueString));
+                    _builder.Append(_dialect.QuoteForTableName(_tablePrefix + id.ChildNodes[i].Token.ValueString, _schema));
                 }
                 else
                 {
@@ -683,7 +692,7 @@ namespace OrchardCore.Queries.Sql
             {
                 if (i == 0 && !_aliases.Contains(id.ChildNodes[i].Token.ValueString))
                 {
-                    _builder.Append(_dialect.QuoteForTableName(_tablePrefix + id.ChildNodes[i].Token.ValueString));
+                    _builder.Append(_dialect.QuoteForTableName(_tablePrefix + id.ChildNodes[i].Token.ValueString, _schema));
                 }
                 else
                 {
@@ -730,10 +739,12 @@ namespace OrchardCore.Queries.Sql
             var hasOverPartitionByClause = overPartitionByClauseOpt.ChildNodes.Count > 0;
             var hasOverOrderByClause = overOrderByClauseOpt.ChildNodes.Count > 0;
 
-            if (hasOverPartitionByClause) {
+            if (hasOverPartitionByClause)
+            {
                 _builder.Append("PARTITION BY ");
                 var columnItemList = overPartitionByClauseOpt.ChildNodes[2];
-                for (var i = 0; i < columnItemList.ChildNodes.Count; i++) {
+                for (var i = 0; i < columnItemList.ChildNodes.Count; i++)
+                {
                     if (i > 0)
                     {
                         _builder.Append(", ");
@@ -746,7 +757,8 @@ namespace OrchardCore.Queries.Sql
 
             if (hasOverOrderByClause)
             {
-                if (hasOverPartitionByClause) {
+                if (hasOverPartitionByClause)
+                {
                     _builder.Append(" ");
                 }
 
@@ -763,7 +775,8 @@ namespace OrchardCore.Queries.Sql
                     var id = orderMember.ChildNodes[0];
                     EvaluateSelectId(id);
                     var orderDirOpt = orderMember.ChildNodes[1];
-                    if (orderDirOpt.ChildNodes.Count > 0) {
+                    if (orderDirOpt.ChildNodes.Count > 0)
+                    {
                         _builder.Append(" ").Append(orderDirOpt.ChildNodes[0].Term.Name);
                     }
                 }

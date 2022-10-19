@@ -69,6 +69,7 @@ namespace OrchardCore.Features.Controllers
                     Descriptor = moduleFeatureInfo,
                     IsEnabled = enabledFeatures.Contains(moduleFeatureInfo),
                     IsAlwaysEnabled = alwaysEnabledFeatures.Contains(moduleFeatureInfo),
+                    EnabledByDependencyOnly = moduleFeatureInfo.EnabledByDependencyOnly,
                     //IsRecentlyInstalled = _moduleService.IsRecentlyInstalled(f.Extension),
                     //NeedsUpdate = featuresThatNeedUpdate.Contains(f.Id),
                     EnabledDependentFeatures = dependentFeatures.Where(x => x.Id != moduleFeatureInfo.Id && enabledFeatures.Contains(x)).ToList(),
@@ -101,7 +102,7 @@ namespace OrchardCore.Features.Controllers
             if (ModelState.IsValid)
             {
                 var features = (await _shellFeaturesManager.GetAvailableFeaturesAsync())
-                    .Where(f => !f.IsTheme() && model.FeatureIds.Contains(f.Id));
+                    .Where(f => !f.EnabledByDependencyOnly && !f.IsTheme() && model.FeatureIds.Contains(f.Id));
 
                 await EnableOrDisableFeaturesAsync(features, model.BulkAction, force);
             }
@@ -112,8 +113,13 @@ namespace OrchardCore.Features.Controllers
         [HttpPost]
         public async Task<IActionResult> Disable(string id)
         {
+            if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageFeatures))
+            {
+                return Forbid();
+            }
+
             var feature = (await _shellFeaturesManager.GetAvailableFeaturesAsync())
-                .FirstOrDefault(f => !f.IsTheme() && f.Id == id);
+                .FirstOrDefault(f => f.Id == id && !f.EnabledByDependencyOnly && !f.IsTheme());
 
             if (feature == null)
             {
@@ -134,8 +140,13 @@ namespace OrchardCore.Features.Controllers
         [HttpPost]
         public async Task<IActionResult> Enable(string id)
         {
+            if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageFeatures))
+            {
+                return Forbid();
+            }
+
             var feature = (await _shellFeaturesManager.GetAvailableFeaturesAsync())
-                .FirstOrDefault(f => !f.IsTheme() && f.Id == id);
+                .FirstOrDefault(f => f.Id == id && !f.EnabledByDependencyOnly && !f.IsTheme());
 
             if (feature == null)
             {
