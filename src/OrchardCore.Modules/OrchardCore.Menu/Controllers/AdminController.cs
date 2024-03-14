@@ -13,6 +13,7 @@ using OrchardCore.ContentManagement.Metadata.Models;
 using OrchardCore.DisplayManagement.ModelBinding;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Menu.Models;
+using System.Text.Json.Dynamic;
 using YesSql;
 
 namespace OrchardCore.Menu.Controllers
@@ -270,7 +271,7 @@ namespace OrchardCore.Menu.Controllers
                 return NotFound();
             }
 
-            var menuContentAsJson = (JsonObject)menu.Content;
+            var menuContentAsJson = (JsonDynamicObject)menu.Content;
             // Look for the target menu item in the hierarchy.
             var menuItem = FindMenuItem(menuContentAsJson, menuItemId);
 
@@ -280,8 +281,9 @@ namespace OrchardCore.Menu.Controllers
                 return NotFound();
             }
 
-            var menuItems = menuContentAsJson[nameof(MenuItemsListPart)]["MenuItems"] as JsonArray;
-            menuItems.Remove(menuItem);
+            var menuItemsListPart = menuContentAsJson[nameof(MenuItemsListPart)] as JsonDynamicObject;
+            var menuItems = menuItemsListPart?[nameof(MenuItemsListPart.MenuItems)] as JsonDynamicArray;
+            menuItems?.Remove(menuItem);
 
             await _contentManager.SaveDraftAsync(menu);
 
