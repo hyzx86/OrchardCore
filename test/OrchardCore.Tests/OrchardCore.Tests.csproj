@@ -26,12 +26,14 @@
     <None Remove="Modules\OrchardCore.OpenId\RecipeFiles\app-recipe2.json" />
     <None Remove="Modules\OrchardCore.OpenId\RecipeFiles\app-recipe3.json" />
     <None Remove="Modules\OrchardCore.OpenId\RecipeFiles\scope-recipe.json" />
+    <None Remove="Recipes\RecipeFiles\fieldTest.recipe.json" />
     <None Remove="Recipes\RecipeFiles\recipe1.json" />
     <None Remove="Recipes\RecipeFiles\recipe2.json" />
     <None Remove="Recipes\RecipeFiles\recipe3.json" />
     <None Remove="Recipes\RecipeFiles\recipe4.json" />
     <None Remove="Recipes\RecipeFiles\recipe5.json" />
     <None Remove="Recipes\RecipeFiles\recipe6.json" />
+    <None Remove="Recipes\RecipeFiles\fieldTest.recipe.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,6 +50,7 @@
     <EmbeddedResource Include="Recipes\RecipeFiles\recipe4.json" />
     <EmbeddedResource Include="Recipes\RecipeFiles\recipe5.json" />
     <EmbeddedResource Include="Recipes\RecipeFiles\recipe6.json" />
+    <EmbeddedResource Include="Recipes\RecipeFiles\fieldTest.recipe.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,6 +78,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="$(DotNetXunitVersion)" />
   </ItemGroup>
+ 
 
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
