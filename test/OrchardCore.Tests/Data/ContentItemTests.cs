@@ -53,7 +53,6 @@ namespace OrchardCore.Tests.Data
             var nullDateTimeField = jobject.SelectNode("NullDateTimeFieldTest").ToObject<DateTimeField>();
 
             // Assert
-
             Assert.Null(nullDateTimeField.Value);
 
             var emptyValueTestexcepion = Assert.Throws<JsonException>(() => jobject.SelectNode("EmptyDateTimeFieldTest").ToObject<DateTimeField>());
@@ -61,7 +60,6 @@ namespace OrchardCore.Tests.Data
 
             var errorFormatValueTestexcepion = Assert.Throws<JsonException>(() => jobject.SelectNode("ErrorFormatDateTimeFieldTest").ToObject<DateTimeField>());
             Assert.Equal("Unable to convert \"ErrorFormatValue\" to DateTime.", errorFormatValueTestexcepion.Message);
-
 
             Assert.Equal("13:05:00", timeField.Value.Value.ToString());
             Assert.Equal("2024-05-31", dateField.Value.Value.ToString("yyyy-MM-dd"));
