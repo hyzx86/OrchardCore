@@ -11,9 +11,9 @@ public interface IJsonDynamicValueHandler
     /// <para><seealso cref="DefaultJsonDyanmicValueHandler"/></para>
     /// </summary>
     /// <param name="parentNode"></param>
-    /// <param name="dynamicValueDict"></param>
-    /// <param name="memberName"></param>
-    /// <param name="memberNode"></param>
+    /// <param name="currentNode"></param>
+    /// <param name="nodeName"></param>
+    /// <param name="result"></param>
     /// <returns></returns>
-    bool GetValue(JsonObject parentNode, Dictionary<string, object?> dynamicValueDict, string memberName, JsonNode memberNode);
+    bool GetValue(JsonNode parentNode, JsonNode currentNode, string nodeName, out object result);
 }

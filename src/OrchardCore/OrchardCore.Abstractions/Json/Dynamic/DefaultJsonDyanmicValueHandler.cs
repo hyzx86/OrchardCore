@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Json.More;
@@ -7,7 +6,7 @@ using Json.More;
 namespace OrchardCore.Json.Dynamic;
 public class DefaultJsonDyanmicValueHandler : IJsonDynamicValueHandler
 {
-    public bool GetValue(JsonObject jsonObject, Dictionary<string, object> dynamicValueDict, string memberName, JsonNode currentNode)
+    public bool GetValue(JsonNode parentNode, JsonNode currentNode, string nodeName, out object result)
     {
         if (currentNode is JsonValue jsonValue)
         {
@@ -15,33 +14,34 @@ public class DefaultJsonDyanmicValueHandler : IJsonDynamicValueHandler
             switch (valueKind)
             {
                 case JsonValueKind.String:
-                    if (memberName == "Value")
+                    if (nodeName == "Value")
                     {
                         if (jsonValue.TryGetValue<DateTime>(out var datetime))
                         {
-                            dynamicValueDict[memberName] = datetime;
+                            result = datetime;
                             return true;
                         }
 
                         if (jsonValue.TryGetValue<TimeSpan>(out var timeSpan))
                         {
-                            dynamicValueDict[memberName] = timeSpan;
+                            result = timeSpan;
                             return true;
                         }
                     }
-                    dynamicValueDict[memberName] = jsonValue.GetString();
+                    result = jsonValue.GetString();
                     return true;
                 case JsonValueKind.Number:
-                    dynamicValueDict[memberName] = jsonValue.GetNumber();
+                    result = jsonValue.GetNumber();
                     return true;
                 case JsonValueKind.True:
-                    dynamicValueDict[memberName] = true;
+                    result = true;
                     return true;
                 case JsonValueKind.False:
-                    dynamicValueDict[memberName] = false;
+                    result = false;
                     return true;
             }
         }
+        result = null;
         return false;
     }
 }

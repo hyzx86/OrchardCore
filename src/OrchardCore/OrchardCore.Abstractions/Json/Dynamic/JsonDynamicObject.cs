@@ -97,14 +97,6 @@ public class JsonDynamicObject : DynamicObject
             return null;
         }
 
-        foreach (var handler in JsonDynamicConfigurations.ValueHandlers)
-        {
-            if (handler.GetValue(_jsonObject, _dictionary, key, jsonNode))
-            {
-                return _dictionary[key];
-            }
-        }
-
         if (jsonNode is JsonObject jsonObject)
         {
             return _dictionary[key] = new JsonDynamicObject(jsonObject);

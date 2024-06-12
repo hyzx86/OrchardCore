@@ -5,6 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using OrchardCore.Json.Dynamic;
 
 namespace System.Text.Json.Dynamic;
 
@@ -12,12 +14,36 @@ namespace System.Text.Json.Dynamic;
 
 public class JsonDynamicValue : DynamicObject, IConvertible
 {
+    private readonly string _memberName = string.Empty;
+    private readonly JsonNode? _parentNode;
+
     public JsonDynamicValue(JsonValue? jsonValue)
     {
         JsonValue = jsonValue;
     }
+    public JsonDynamicValue(JsonValue? jsonValue, JsonNode parentNode, string memberName)
+    {
+        JsonValue = jsonValue;
+        _parentNode = parentNode;
+        _memberName = memberName;
+    }
 
+    [JsonIgnore]
     public JsonValue? JsonValue { get; }
+
+
+    public override bool TryConvert(ConvertBinder binder, out object? result)
+    {
+        foreach (var handler in JsonDynamicConfigurations.ValueHandlers)
+        {
+            if (handler.GetValue(_parentNode, JsonValue, _memberName, out result))
+            {
+                return true;
+            }
+        }
+
+        return base.TryConvert(binder, out result);
+    }
 
     public override DynamicMetaObject GetMetaObject(Expression parameter)
     {
@@ -400,6 +426,6 @@ public class JsonDynamicValue : DynamicObject, IConvertible
 
             // Fallback to default behavior.
             return base.BindConvert(binder);
-        }
+        }        
     }
 }
