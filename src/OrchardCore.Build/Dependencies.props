@@ -5,6 +5,8 @@
   <PropertyGroup>
     <!-- Special case - this property is used by a DotNetCliToolReference -->
     <DotNetXunitVersion>2.3.0</DotNetXunitVersion>
+
+    <YessqlVersion>4.0.1-jzbeta-4.0-updateTypeService-12</YessqlVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,11 +63,11 @@
     <PackageManagement Include="xunit" Version="2.6.4" />
     <PackageManagement Include="xunit.analyzers" Version="1.8.0" />
     <PackageManagement Include="xunit.runner.visualstudio" Version="2.5.6" />
-    <PackageManagement Include="YesSql" Version="4.0.0" />
-    <PackageManagement Include="YesSql.Abstractions" Version="4.0.0" />
-    <PackageManagement Include="YesSql.Core" Version="4.0.0" />
-    <PackageManagement Include="YesSql.Filters.Abstractions" Version="4.0.0" />
-    <PackageManagement Include="YesSql.Filters.Query" Version="4.0.0" />
+    <PackageManagement Include="YesSql" Version="$(YessqlVersion)" />
+		<PackageManagement Include="YesSql.Abstractions" Version="$(YessqlVersion)" />
+		<PackageManagement Include="YesSql.Core" Version="$(YessqlVersion)" />
+		<PackageManagement Include="YesSql.Filters.Abstractions" Version="$(YessqlVersion)" />
+		<PackageManagement Include="YesSql.Filters.Query" Version="$(YessqlVersion)" />
     <PackageManagement Include="ZString" Version="2.5.1" />
   </ItemGroup>
 </Project>
