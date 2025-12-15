@@ -1,19 +1,19 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using EasyOC.Core.Shared.Workflows;
 using Newtonsoft.Json.Linq;
 using OrchardCore.Recipes.Models;
 using OrchardCore.Recipes.Services;
 using OrchardCore.Workflows.Models;
-using OrchardCore.Workflows.Services;
 
 namespace OrchardCore.Workflows.Recipes
 {
     public class WorkflowTypeStep : IRecipeStepHandler
     {
-        private readonly IWorkflowTypeStore _workflowTypeStore;
+        private readonly IVersioningWorkflowTypeStore _workflowTypeStore;
 
-        public WorkflowTypeStep(IWorkflowTypeStore workflowTypeStore)
+        public WorkflowTypeStep(IVersioningWorkflowTypeStore workflowTypeStore)
         {
             _workflowTypeStore = workflowTypeStore;
         }
@@ -33,16 +33,16 @@ namespace OrchardCore.Workflows.Recipes
 
                 var existing = await _workflowTypeStore.GetAsync(workflow.WorkflowTypeId);
 
+                workflow.Id = 0;
                 if (existing == null)
                 {
-                    workflow.Id = 0;
+                    await _workflowTypeStore.SaveAsync(workflow);
                 }
                 else
                 {
-                    await _workflowTypeStore.DeleteAsync(existing);
+                    await _workflowTypeStore.SaveAsync(workflow, true);
                 }
 
-                await _workflowTypeStore.SaveAsync(workflow);
             }
         }
     }

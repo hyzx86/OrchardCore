@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EasyOC.Core.Shared.Workflows;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
@@ -35,7 +36,7 @@ namespace OrchardCore.Workflows.Controllers
         private readonly PagerOptions _pagerOptions;
         private readonly ISession _session;
         private readonly IWorkflowManager _workflowManager;
-        private readonly IWorkflowTypeStore _workflowTypeStore;
+        private readonly IVersioningWorkflowTypeStore _workflowTypeStore;
         private readonly IWorkflowStore _workflowStore;
         private readonly IAuthorizationService _authorizationService;
         private readonly IActivityDisplayManager _activityDisplayManager;
@@ -50,7 +51,7 @@ namespace OrchardCore.Workflows.Controllers
             IOptions<PagerOptions> pagerOptions,
             ISession session,
             IWorkflowManager workflowManager,
-            IWorkflowTypeStore workflowTypeStore,
+            IVersioningWorkflowTypeStore workflowTypeStore,
             IWorkflowStore workflowStore,
             IAuthorizationService authorizationService,
             IActivityDisplayManager activityDisplayManager,
@@ -89,7 +90,7 @@ namespace OrchardCore.Workflows.Controllers
             }
 
             var workflowType = await _workflowTypeStore.GetAsync(workflowTypeId);
-
+            var workflowTypeExt = workflowType.GetWorkflowTypeVersionAudit();
             var query = _session.QueryIndex<WorkflowIndex>()
                 .Where(x => x.WorkflowTypeId == workflowType.WorkflowTypeId);
 
@@ -97,6 +98,13 @@ namespace OrchardCore.Workflows.Controllers
             {
                 WorkflowFilter.Finished => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Finished),
                 WorkflowFilter.Faulted => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Faulted),
+                WorkflowFilter.Halted => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Halted),
+                WorkflowFilter.Idle => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Idle),
+                WorkflowFilter.Resuming => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Resuming),
+                WorkflowFilter.Starting => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Starting),
+                WorkflowFilter.Executing => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Executing),
+                WorkflowFilter.Aborted => query.Where(x => x.WorkflowStatus == (int)WorkflowStatus.Aborted),
+
                 _ => query,
             };
 
@@ -140,13 +148,16 @@ namespace OrchardCore.Workflows.Controllers
                 new SelectListItem() { Text = S["Least recently created"], Value = nameof(WorkflowOrder.Created) },
             };
 
-            model.Options.WorkflowsStatuses = new List<SelectListItem>()
-            {
-                new SelectListItem() { Text = S["All"], Value = nameof(WorkflowFilter.All) },
-                new SelectListItem() { Text = S["Faulted"], Value = nameof(WorkflowFilter.Faulted) },
-                new SelectListItem() { Text = S["Finished"], Value = nameof(WorkflowFilter.Finished) },
-            };
-
+            //model.Options.WorkflowsStatuses = new List<SelectListItem>()
+            //{
+            //    new SelectListItem() { Text = S["All"], Value = nameof(WorkflowFilter.All) },
+            //    new SelectListItem() { Text = S["Faulted"], Value = nameof(WorkflowFilter.Faulted) },
+            //    new SelectListItem() { Text = S["Executing"], Value = nameof(WorkflowFilter.Executing) },
+            //    new SelectListItem() { Text = S["Halted"], Value = nameof(WorkflowFilter.Halted) },
+            //    new SelectListItem() { Text = S["Idle"], Value = nameof(WorkflowFilter.Idle) },
+            //    new SelectListItem() { Text = S["Finished"], Value = nameof(WorkflowFilter.Finished) },
+            //};
+            model.Options.WorkflowsStatuses = Enum.GetNames<WorkflowFilter>().Select(x => new SelectListItem() { Text = S[x], Value = x }).ToList();
             viewModel.Options.WorkflowsBulkAction = new List<SelectListItem>()
             {
                 new SelectListItem() { Text = S["Delete"], Value = nameof(WorkflowBulkAction.Delete) },
@@ -180,7 +191,7 @@ namespace OrchardCore.Workflows.Controllers
                 return NotFound();
             }
 
-            var workflowType = await _workflowTypeStore.GetAsync(workflow.WorkflowTypeId);
+            var workflowType = await _workflowTypeStore.GetAsync(workflow);
             var blockingActivities = workflow.BlockingActivities.ToDictionary(x => x.ActivityId);
             var workflowContext = await _workflowManager.CreateWorkflowExecutionContextAsync(workflowType, workflow);
             var activityContexts = await Task.WhenAll(workflowType.Activities.Select(x => _workflowManager.CreateActivityExecutionContextAsync(x, x.Properties)));

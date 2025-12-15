@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using OrchardCore.Workflows.Models;
 using YesSql.Indexes;
+using EasyOC.Core.Shared.Workflows;
 
 namespace OrchardCore.Workflows.Indexes
 {
@@ -12,6 +13,9 @@ namespace OrchardCore.Workflows.Indexes
         public string WorkflowId { get; set; }
         public int WorkflowStatus { get; set; }
         public DateTime CreatedUtc { get; set; }
+        public string WorkflowTypeVersionId { get; set; }
+        public DateTime? LastExecutedOnUtc { get; set; }
+        public string StatusName { get; set; }
     }
 
     public class WorkflowBlockingActivitiesIndex : MapIndex
@@ -21,6 +25,7 @@ namespace OrchardCore.Workflows.Indexes
         public bool ActivityIsStart { get; set; }
         public string WorkflowTypeId { get; set; }
         public string WorkflowId { get; set; }
+        public string WorkflowTypeVersionId { get; set; }
         public string WorkflowCorrelationId { get; set; }
     }
 
@@ -30,27 +35,40 @@ namespace OrchardCore.Workflows.Indexes
         {
             context.For<WorkflowIndex>()
                 .Map(workflow =>
-                    new WorkflowIndex
                     {
-                        WorkflowTypeId = workflow.WorkflowTypeId,
-                        WorkflowId = workflow.WorkflowId,
-                        CreatedUtc = workflow.CreatedUtc,
-                        WorkflowStatus = (int)workflow.Status
+                        var state = workflow.GetWorkflowState();
+
+                        var index = new WorkflowIndex
+                        {
+                            WorkflowTypeId = workflow.WorkflowTypeId,
+                            WorkflowId = workflow.WorkflowId,
+                            CreatedUtc = workflow.CreatedUtc,
+                            WorkflowStatus = (int)workflow.Status,
+                            WorkflowTypeVersionId = state.WorkflowTypeVersionId,
+                            LastExecutedOnUtc = state.LastExecutedOn,
+                            StatusName = workflow.Status.ToString()
+                        };
+                        return index;
                     }
                 );
 
             context.For<WorkflowBlockingActivitiesIndex>()
                 .Map(workflow =>
-                    workflow.BlockingActivities.Select(x =>
-                    new WorkflowBlockingActivitiesIndex
-                    {
-                        ActivityId = x.ActivityId,
-                        ActivityName = x.Name,
-                        ActivityIsStart = x.IsStart,
-                        WorkflowTypeId = workflow.WorkflowTypeId,
-                        WorkflowId = workflow.WorkflowId,
-                        WorkflowCorrelationId = workflow.CorrelationId ?? ""
-                    })
+                     {
+                         var state = workflow.GetWorkflowState();
+                         var blockIndex = workflow.BlockingActivities.Select(x =>
+                               new WorkflowBlockingActivitiesIndex
+                               {
+                                   ActivityId = x.ActivityId,
+                                   ActivityName = x.Name,
+                                   ActivityIsStart = x.IsStart,
+                                   WorkflowTypeId = workflow.WorkflowTypeId,
+                                   WorkflowId = workflow.WorkflowId,
+                                   WorkflowTypeVersionId = state.WorkflowTypeVersionId,
+                                   WorkflowCorrelationId = workflow.CorrelationId ?? ""
+                               });
+                         return blockIndex;
+                     }
                 );
         }
     }

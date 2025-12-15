@@ -1,4 +1,5 @@
 using System;
+using EasyOC.Core.Shared.Workflows;
 using Fluid;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -59,7 +60,14 @@ namespace OrchardCore.Workflows
             services.AddScoped(typeof(Resolver<>));
             services.AddSingleton<ISecurityTokenService, SecurityTokenService>();
             services.AddScoped<IActivityLibrary, ActivityLibrary>();
-            services.AddScoped<IWorkflowTypeStore, WorkflowTypeStore>();
+
+            // new Store
+            services.AddScoped<IVersioningWorkflowTypeStore, WorkflowTypeStore>();
+            services.AddScoped<IWorkflowTypeStore>(sp =>
+            {
+                return sp.GetRequiredService<IVersioningWorkflowTypeStore>();
+            });
+
             services.AddScoped<IWorkflowStore, WorkflowStore>();
             services.AddScoped<IWorkflowManager, WorkflowManager>();
             services.AddScoped<IActivityDisplayManager, ActivityDisplayManager>();
@@ -91,6 +99,7 @@ namespace OrchardCore.Workflows
 
             services.AddRecipeExecutionStep<WorkflowTypeStep>();
             services.AddTransient<IConfigureOptions<ResourceManagementOptions>, ResourceManagementOptionsConfiguration>();
+
         }
 
         public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)

@@ -51,8 +51,14 @@ namespace OrchardCore.Workflows.ViewModels
     public enum WorkflowFilter
     {
         All,
+        Idle,
+        Starting,
+        Resuming,
+        Executing,
+        Halted,
         Finished,
-        Faulted
+        Faulted,
+        Aborted
     }
 
     public enum WorkflowOrder

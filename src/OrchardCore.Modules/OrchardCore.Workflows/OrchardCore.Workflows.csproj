@@ -36,7 +36,12 @@
     <ProjectReference Include="..\..\OrchardCore\OrchardCore.ResourceManagement.Abstractions\OrchardCore.ResourceManagement.Abstractions.csproj" />
     <ProjectReference Include="..\..\OrchardCore\OrchardCore.Workflows.Abstractions\OrchardCore.Workflows.Abstractions.csproj" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <ProjectReference Include="$(EOCRootDir)src\Core\EasyOC.Core.Shared\EasyOC.Core.Shared.csproj" />
+    <ProjectReference Include="$(EOCRootDir)src\Core\EasyOC.Core\EasyOC.Core.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <TypeScriptCompile Include="Assets\Lib\jquery\typings.d.ts" />
     <TypeScriptCompile Include="Assets\Lib\jsplumb\typings.d.ts" />
@@ -57,5 +62,6 @@
     <TypeScriptMapRoot />
     <TypeScriptSourceRoot />
   </PropertyGroup>
+
 
 </Project>

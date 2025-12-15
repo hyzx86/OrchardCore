@@ -7,6 +7,7 @@
     <DotNetXunitVersion>2.3.0</DotNetXunitVersion>
 
     <YessqlVersion>4.0.1-jzbeta-4.0-updateTypeService-12</YessqlVersion>
+
   </PropertyGroup>
 
   <ItemGroup>

@@ -10,6 +10,8 @@
     <!-- TFMs used to build the abstractions and modules, by convention the default TFM is at the first position -->
     <!-- In a cross-targeting build, some assets are only copied on the first TFM, by convention the default TFM -->
     <CommonTargetFrameworks Condition="'$(CommonTargetFrameworks)' == ''">net8.0</CommonTargetFrameworks>
+    
+		<EOCRootDir>$(SolutionDir)</EOCRootDir>
   </PropertyGroup>
 
   <!-- Detect if the solution is opened in VS to limit the TFMs that are analyzed by Roslyn for performance reasons -->
@@ -49,6 +51,35 @@
   <ItemGroup>
     <PackageManagement Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="$(MicrosoftExtensionsPackagesVersion)" />
     <PackageManagement Include="Microsoft.Extensions.Http.Polly" Version="$(MicrosoftExtensionsPackagesVersion)" />
-  </ItemGroup>
+  </ItemGroup> 
 
+
+  <PropertyGroup>
+    <!-- 1. 基础：项目目录的一级上级目录（如项目在 src/ProjectA → src/） -->
+    <ProjectParentDir1>$(MSBuildProjectDir)</ProjectParentDir1>
+    <ProjectParentDir>$(MSBuildProjectDir)../</ProjectParentDir>
+    <!-- 标准化路径（关键：消除相对路径、统一分隔符） -->
+    <ProjectParentDir>$([System.IO.Path]::GetFullPath($(ProjectParentDir)))</ProjectParentDir>
+
+    <!-- 2. 扩展：项目目录的两级上级目录（如 src/ProjectA → 解决方案根） -->
+    <ProjectGrandParentDir>$(MSBuildProjectDir)../../</ProjectGrandParentDir>
+    <ProjectGrandParentDir>$([System.IO.Path]::GetFullPath($(ProjectGrandParentDir)))</ProjectGrandParentDir>
+
+    <!-- 3. 确保路径末尾带分隔符（避免拼接时出错） -->
+    <ProjectParentDir Condition="!HasTrailingSlash('$(ProjectParentDir)')">$(ProjectParentDir)\</ProjectParentDir>
+    <ProjectGrandParentDir Condition="!HasTrailingSlash('$(ProjectGrandParentDir)')">$(ProjectGrandParentDir)\</ProjectGrandParentDir>
+  </PropertyGroup>
+
+  <!-- 验证：输出变量值 -->
+  <Target Name="PrintParentDir" BeforeTargets="Build">
+
+
+    <Message Text="📌 EOCRootDir目录：$(EOCRootDir)" Importance="high" />
+    <Message Text="📌 SolutionDir目录：$(SolutionDir)" Importance="high" />
+    <Message Text="📌 MSBuildProjectDirectory目录：$(MSBuildProjectDirectory)" Importance="high" />
+    <Message Text="📌 项目目录：$(ProjectParentDir1)" Importance="high" />
+    <!--<Message Text="📌 EasyOC.Core目录：$(EOCRootDir)src\Core\EasyOC.Core.Shared\EasyOC.Core.Shared.csproj" Importance="high" />-->
+    <Message Text="📌 项目一级上级目录：$(ProjectParentDir)" Importance="high" />
+    <Message Text="📌 项目两级上级目录：$(ProjectGrandParentDir)" Importance="high" />
+  </Target>
 </Project>

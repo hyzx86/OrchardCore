@@ -44,7 +44,7 @@ namespace OrchardCore.Workflows.Controllers
         private readonly INotifier _notifier;
         private readonly ISecurityTokenService _securityTokenService;
         private readonly IUpdateModelAccessor _updateModelAccessor;
-
+        private readonly IFreeSql _freeSql;
         protected readonly dynamic New;
         protected readonly IStringLocalizer S;
         protected readonly IHtmlLocalizer H;
@@ -64,7 +64,8 @@ namespace OrchardCore.Workflows.Controllers
             ISecurityTokenService securityTokenService,
             IStringLocalizer<WorkflowTypeController> s,
             IHtmlLocalizer<WorkflowTypeController> h,
-            IUpdateModelAccessor updateModelAccessor)
+            IUpdateModelAccessor updateModelAccessor,
+            IFreeSql freeSql)
         {
             _pagerOptions = pagerOptions.Value;
             _session = session;
@@ -81,6 +82,7 @@ namespace OrchardCore.Workflows.Controllers
             New = shapeFactory;
             S = s;
             H = h;
+            _freeSql = freeSql;
         }
 
         public async Task<IActionResult> Index(WorkflowTypeIndexOptions options, PagerParameters pagerParameters)
@@ -94,7 +96,7 @@ namespace OrchardCore.Workflows.Controllers
 
             options ??= new WorkflowTypeIndexOptions();
 
-            var query = _session.Query<WorkflowType, WorkflowTypeIndex>();
+            var query = _session.Query<WorkflowType, WorkflowTypeIndex>(x => x.Latest);
 
             switch (options.Filter)
             {
@@ -122,8 +124,6 @@ namespace OrchardCore.Workflows.Controllers
                 .Take(pager.PageSize)
                 .ListAsync();
 
-            using var connection = await _session.CreateConnectionAsync();
-
             var dialect = _session.Store.Configuration.SqlDialect;
             var sqlBuilder = dialect.CreateBuilder(_session.Store.Configuration.TablePrefix);
             sqlBuilder.Select();
@@ -131,7 +131,10 @@ namespace OrchardCore.Workflows.Controllers
             sqlBuilder.Selector(nameof(WorkflowIndex), nameof(WorkflowIndex.WorkflowTypeId), _session.Store.Configuration.Schema);
             sqlBuilder.Table(nameof(WorkflowIndex), alias: null, _session.Store.Configuration.Schema);
 
-            var workflowTypeIdsWithInstances = await connection.QueryAsync<string>(sqlBuilder.ToSqlString());
+            // Use existing session connection. Do not use 'using' or dispose the connection.
+            var connection = await _session.CreateConnectionAsync();
+            var workflowTypeIdsWithInstances = (await connection.QueryAsync<string>(sqlBuilder.ToSqlString(), param: null, _session.CurrentTransaction)).ToList();
+            //var workflowTypeIdsWithInstances = await _freeSql.Select<WorkflowIndex>().Distinct().ToListAsync(x => x.WorkflowTypeId);
 
             // Maintain previous route data when generating page links.
             var routeData = new RouteData();
