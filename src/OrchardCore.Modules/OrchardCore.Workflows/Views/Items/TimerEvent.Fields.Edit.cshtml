@@ -1,9 +1,129 @@
-@using OrchardCore.Workflows.Timers
-@model TimerEventViewModel
+﻿@using EasyOC.Scripting.Servicies;
+@model EasyOC.Workflows.Timers.TimerEventViewModel
+@inject IScriptMethodService _scriptSchemaService;
+
+@{
+    string monacoEditorSuggestion = await _scriptSchemaService.GetTsSuggestion();
+}
 
 <div class="mb-3" asp-validation-class-for="CronExpression">
-    <label asp-for="CronExpression" class="form-label">@T["CRON Expression"]</label>
-    <input type="text" asp-for="CronExpression" class="form-control" autofocus />
+    <label asp-for="CronExpression">@T["CRON Expression"]</label>
+    <textarea asp-for="CronExpression" class="form-control" autofocus ></textarea>
     <span asp-validation-for="CronExpression"></span>
-    <span class="hint">@T["The CRON expression."]</span>
+    <span class="hint">
+        @T["The CRON expression."] see<a target="_blank" href="https://github.com/atifaziz/NCrontab/wiki/Crontab-Expression"> Crontab-Expression</a>
+        and
+        <a target="_blank" href="https://tool.lu/crontab/"> Crontab-tool</a>
+    </span>
 </div>
+
+<div class="mb-3">
+    <div class="form-check">
+        <input asp-for="UseSiteTimeZone" type="checkbox" class="form-check-input">
+        <label class="form-check-label" asp-for="UseSiteTimeZone">@T["Use the site time zone instead of Utc."]</label>
+    </div>
+</div>
+
+
+
+<div class="mb-3">
+    <div class="form-check">
+        <input multiple="true" asp-for="UseScriptCondition" type="checkbox" class="form-check-input">
+        <label class="form-check-label" asp-for="UseScriptCondition">@T["使用Javascript 脚本进一步检查执行条件"]</label>
+    </div>
+</div>
+<div class="form-group" id="fg_ScriptCondition" asp-validation-class-for="ScriptCondition" style="display:none;">
+    <label asp-for="ScriptCondition">@T["Script"]</label>
+    <div id="@Html.IdFor(x => x.ScriptCondition)_editor" asp-for="Text" style="min-height: 400px;" class="form-control"></div>
+    <textarea asp-for="ScriptCondition" hidden>@Html.Raw(Model.ScriptCondition)</textarea>
+    <span asp-validation-for="ScriptCondition"></span>
+    <span class="hint">@T["当进入周期后运行js脚本进一步检查执行条件，如果返回 true 则对应工作流将被触发，反之则不会触发工作流。Javascript语法。"]</span><br />
+
+</div>
+<script asp-name="monaco" depends-on="admin" at="Foot"></script>
+<script at="Foot" depends-on="monaco">
+    function toggleEditorDisplay() {
+        if ($("#@Html.IdFor(m=>m.UseScriptCondition)").prop("checked")) {
+            $("#fg_ScriptCondition").show()
+        } else {
+            $("#fg_ScriptCondition").hide()
+        }
+    }
+
+    $(document).ready(function () {
+        $("#@Html.IdFor(m=>m.UseScriptCondition)").change(function () {
+            toggleEditorDisplay()
+        })
+        toggleEditorDisplay();
+
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 'r') {
+                event.preventDefault();
+            }
+        });
+
+        require(['vs/editor/editor.main'], function () {
+            var settings = {
+                "automaticLayout": true,
+                "language": "javascript"
+            };
+
+            var html = document.getElementsByTagName("html")[0];
+            const mutationObserver = new MutationObserver(setTheme);
+            mutationObserver.observe(html, { attributes: true });
+
+            function setTheme() {
+                var theme = html.dataset.theme;
+                if (theme === "darkmode") {
+                    monaco.editor.setTheme('vs-dark')
+                } else {
+                    monaco.editor.setTheme('vs')
+                }
+            }
+
+            setTheme();
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(`@Html.Raw(monacoEditorSuggestion)`);
+            var workflowSuggestions = `
+                //OrchardCore\src\OrchardCore.Modules\OrchardCore.Workflows\Scripting\WorkflowMethodsProvider.cs
+                //WorkflowMethodsProvider
+                    declare function workflow(): object //workflowContext
+                    /**
+                     * 获取当前工作流Id
+                     * @@returns 返回工作流Id
+                     */
+                    declare function workflowId(): string
+
+                    declare function input(str: string): object
+
+                    declare function property(str: string): object
+
+                    declare function output(name: string, value: string): void
+
+                    declare function setProperty(name: string, value: string): void
+
+                    declare function lastResult(): object
+
+                    declare function correlationId(): string
+
+
+                    declare function setOutcome(name: string): void
+
+                    declare function signalUrl(signal: string): string
+                `
+
+
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(workflowSuggestions);
+
+            var editor = monaco.editor.create(document.getElementById('@Html.IdFor(x => x.ScriptCondition)_editor'), settings);
+            var textArea = document.getElementById('@Html.IdFor(x => x.ScriptCondition)');
+
+
+            editor.getModel().setValue(textArea.value);
+
+            window.addEventListener("submit", function () {
+                textArea.value = editor.getValue();
+            });
+        });
+    });
+</script>
+

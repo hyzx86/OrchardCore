@@ -12,6 +12,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Remove="Views\Items\TimerEvent.Fields.Design.cshtml" />
+    <EmbeddedResource Remove="Views\Items\TimerEvent.Fields.Edit.cshtml" />
+    <EmbeddedResource Remove="Views\Items\TimerEvent.Fields.Thumbnail.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Views\Items\TimerEvent.Fields.Design.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Views\Items\TimerEvent.Fields.Edit.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Views\Items\TimerEvent.Fields.Thumbnail.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
