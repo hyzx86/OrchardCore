@@ -15,8 +15,8 @@
     }
   },
   "usageExamples": [
-    "--framework net8.0",
+    "--framework net7.0",
     "--logger none",
-    "--orchard-version 1.8.4"
+    "--orchard-version 1.6.0"
   ]
 }
