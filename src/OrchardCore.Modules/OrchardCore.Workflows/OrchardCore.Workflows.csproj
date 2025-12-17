@@ -10,28 +10,7 @@
     The Workflows module provides tools and APIs to create custom workflows.</Description>
     <PackageTags>$(PackageTags) OrchardCoreCMS</PackageTags>
   </PropertyGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="Views\Items\TimerEvent.Fields.Design.cshtml" />
-    <EmbeddedResource Remove="Views\Items\TimerEvent.Fields.Edit.cshtml" />
-    <EmbeddedResource Remove="Views\Items\TimerEvent.Fields.Thumbnail.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Views\Items\TimerEvent.Fields.Design.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="Views\Items\TimerEvent.Fields.Edit.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="Views\Items\TimerEvent.Fields.Thumbnail.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-
+  
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -61,6 +40,8 @@
   <ItemGroup>
     <ProjectReference Include="$(EOCRootDir)src\Core\EasyOC.Core.Shared\EasyOC.Core.Shared.csproj" />
     <ProjectReference Include="$(EOCRootDir)src\Core\EasyOC.Core\EasyOC.Core.csproj" />
+
+    <ProjectReference Include="$(EOCRootDir)src\Modules\EasyOC.Scripting\EasyOC.Scripting.csproj" />
   </ItemGroup>
   
   <ItemGroup>
