@@ -142,7 +142,7 @@ namespace OrchardCore.Recipes.Services
             catch (Exception)
             {
                 await _recipeEventHandlers.InvokeAsync((handler, executionId, recipeDescriptor) => handler.ExecutionFailedAsync(executionId, recipeDescriptor), executionId, recipeDescriptor, _logger);
-
+                _logger.LogError("Recipe execution failed for recipe '{RecipeName}'.", recipeDescriptor.RecipeFileInfo?.Name ?? "<unknown>");
                 throw;
             }
             finally
