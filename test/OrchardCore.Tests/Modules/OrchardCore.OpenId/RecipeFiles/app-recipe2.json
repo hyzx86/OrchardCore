@@ -15,6 +15,7 @@
       "clientSecret": "test-secret",
       "displayName": "Test Application",
       "type": "confidential",
+      "applicationType": "native",
       "consentType": "explicit",
       "allowClientCredentialsFlow": true,
       "redirectUris": "https://localhost/redirect",

@@ -15,6 +15,7 @@
       "clientSecret": "test-secret",
       "displayName": "Test Application",
       "type": "confidential",
+      "applicationType": "web",
       "consentType": "explicit",
       "allowAuthorizationCodeFlow": true,
       "allowRefreshTokenFlow": true,

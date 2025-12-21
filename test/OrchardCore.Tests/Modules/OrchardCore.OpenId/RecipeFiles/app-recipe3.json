@@ -13,6 +13,7 @@
       "name": "OpenIdApplication",
       "clientId": "a1",
       "displayName": "Expected Name",
+      "applicationType": "web",
       "redirectUris": "https://localhost/redirect"
     }
   ]
