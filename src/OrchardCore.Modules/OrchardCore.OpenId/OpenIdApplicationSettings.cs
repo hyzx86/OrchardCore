@@ -14,6 +14,7 @@ namespace OrchardCore.OpenId
         public string RedirectUris { get; set; }
         public string PostLogoutRedirectUris { get; set; }
         public string Type { get; set; }
+        public string ApplicationType { get; set; }
         public string ConsentType { get; set; }
         public string ClientSecret { get; set; }
         public string[] Roles { get; set; }
@@ -45,6 +46,7 @@ namespace OrchardCore.OpenId
             descriptor.ConsentType = model.ConsentType;
             descriptor.DisplayName = model.DisplayName;
             descriptor.ClientType = model.Type;
+            descriptor.ApplicationType = model.ApplicationType ?? "web"; // 默认值为web，确保兼容性
 
             if (!string.IsNullOrEmpty(model.ClientSecret))
             {

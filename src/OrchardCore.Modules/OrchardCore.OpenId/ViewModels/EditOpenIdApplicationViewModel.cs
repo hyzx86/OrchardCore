@@ -23,6 +23,8 @@ namespace OrchardCore.OpenId.ViewModels
 
         public string Type { get; set; }
 
+        public string ApplicationType { get; set; }
+
         public string ConsentType { get; set; }
 
         public string ClientSecret { get; set; }

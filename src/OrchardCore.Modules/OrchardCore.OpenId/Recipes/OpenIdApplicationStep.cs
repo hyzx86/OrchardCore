@@ -49,6 +49,7 @@ namespace OrchardCore.OpenId.Recipes
                 Roles = model.RoleEntries.Select(x => x.Name).ToArray(),
                 Scopes = model.ScopeEntries.Select(x => x.Name).ToArray(),
                 Type = model.Type,
+                ApplicationType = model.ApplicationType,
                 RequireProofKeyForCodeExchange = model.RequireProofKeyForCodeExchange,
             };
 

@@ -9,6 +9,7 @@ namespace OrchardCore.OpenId.Recipes
         public string RedirectUris { get; set; }
         public string PostLogoutRedirectUris { get; set; }
         public string Type { get; set; }
+        public string ApplicationType { get; set; }
         public string ConsentType { get; set; }
         public string ClientSecret { get; set; }
         public RoleEntry[] RoleEntries { get; set; } = Array.Empty<RoleEntry>();

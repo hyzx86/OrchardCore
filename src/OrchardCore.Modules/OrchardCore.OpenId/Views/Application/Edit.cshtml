@@ -29,6 +29,14 @@
         </select>
         <div class="hint">@T["Confidential applications MUST send their client secret when communicating with the token and revocation endpoints. This guarantees that only the legit client can exchange an authorization code or get a refresh token."]</div>
     </div>
+    <div class="mb-3" asp-validation-class-for="ApplicationType">
+        <label asp-for="ApplicationType" class="form-label">@T["Application Type"]</label>
+        <select asp-for="ApplicationType" class="form-select">
+            <option value="web">@T["Web"]</option>
+            <option value="native">@T["Native"]</option>
+        </select>
+        <div class="hint">@T["Web applications run on a server, while native applications run on a user device. This affects how authentication is handled."]</div>
+    </div>
     <div class="mb-3" asp-validation-class-for="ClientSecret">
         <label asp-for="ClientSecret" class="form-label">@T["Client Secret"] (@T["enter a new value to replace the existing secret"])</label>
         <input asp-for="ClientSecret" class="form-control" autofocus autocomplete="off" />
