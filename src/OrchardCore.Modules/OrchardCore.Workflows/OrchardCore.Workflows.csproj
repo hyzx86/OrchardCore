@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TypeScriptToolsVersion>2.3</TypeScriptToolsVersion>
@@ -39,7 +39,7 @@
   
   <ItemGroup>
     <ProjectReference Include="$(EOCRootDir)src\Core\EasyOC.Core.Shared\EasyOC.Core.Shared.csproj" />
-    <ProjectReference Include="$(EOCRootDir)src\Core\EasyOC.Core\EasyOC.Core.csproj" />
+    <ProjectReference Include="$(EOCRootDir)src\Modules\EasyOC.Core\EasyOC.Core.csproj" />
 
     <ProjectReference Include="$(EOCRootDir)src\Modules\EasyOC.Scripting\EasyOC.Scripting.csproj" />
   </ItemGroup>
