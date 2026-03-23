@@ -38,6 +38,7 @@ namespace OrchardCore.Scripting
             {
                 return directive;
             }
+            //TODO:IScriptExecutionManager
 
             var methodProviders = scopedMethodProviders != null ? GlobalMethodProviders.Concat(scopedMethodProviders) : GlobalMethodProviders;
             var scope = engine.CreateScope(methodProviders.SelectMany(x => x.GetMethods()), ShellScope.Services, fileProvider, basePath);

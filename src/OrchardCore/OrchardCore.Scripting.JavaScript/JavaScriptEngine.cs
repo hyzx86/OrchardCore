@@ -19,6 +19,8 @@ namespace OrchardCore.Scripting.JavaScript
 
         public IScriptingScope CreateScope(IEnumerable<GlobalMethod> methods, IServiceProvider serviceProvider, IFileProvider fileProvider, string basePath)
         {
+            //TODO:IScriptExecutionManager
+
             var engine = new Engine();
 
             foreach (var method in methods)
