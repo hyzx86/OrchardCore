@@ -4,7 +4,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Threading;
 using System.Threading.Tasks;
+using EasyOC.Core.Shared.Workflows;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Localization;
 using OrchardCore.Workflows.Abstractions.Models;
@@ -83,19 +85,22 @@ namespace OrchardCore.Workflows.Http.Activities
             { 599, "Network Connect Timeout Error" }
         };
 
-        private static readonly HttpClient _httpClient = new();
+        private static readonly HttpClient _httpClient = new() { Timeout = Timeout.InfiniteTimeSpan };
         private readonly IWorkflowExpressionEvaluator _expressionEvaluator;
+        private readonly IWorkflowExecutionLeaseManager _executionLeaseManager;
         protected readonly IStringLocalizer S;
         private readonly UrlEncoder _urlEncoder;
 
         public HttpRequestTask(
             IStringLocalizer<HttpRequestTask> localizer,
             IWorkflowExpressionEvaluator expressionEvaluator,
+            IWorkflowExecutionLeaseManager executionLeaseManager,
             UrlEncoder urlEncoder
         )
         {
             S = localizer;
             _expressionEvaluator = expressionEvaluator;
+            _executionLeaseManager = executionLeaseManager;
             _urlEncoder = urlEncoder;
         }
 
@@ -139,6 +144,12 @@ namespace OrchardCore.Workflows.Http.Activities
             set => SetProperty(value);
         }
 
+        public int TimeoutSeconds
+        {
+            get => GetProperty(() => 0);
+            set => SetProperty(value);
+        }
+
         public override IEnumerable<Outcome> GetPossibleOutcomes(WorkflowExecutionContext workflowContext, ActivityContext activityContext)
         {
             var outcomes = !string.IsNullOrWhiteSpace(HttpResponseCodes)
@@ -179,7 +190,19 @@ namespace OrchardCore.Workflows.Http.Activities
                 request.Content = new StringContent(body, Encoding.UTF8, contentType);
             }
 
-            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead);
+            using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                _executionLeaseManager.GetCurrentCancellationToken()
+            );
+            if (TimeoutSeconds > 0)
+            {
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(TimeoutSeconds));
+            }
+
+            var response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseContentRead,
+                cancellationTokenSource.Token
+            );
             var responseCodes = ParseResponseCodes(HttpResponseCodes);
             var outcome = responseCodes.FirstOrDefault(x => x == (int)response.StatusCode);
 

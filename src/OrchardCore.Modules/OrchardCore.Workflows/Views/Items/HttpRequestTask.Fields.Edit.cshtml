@@ -55,6 +55,13 @@
     <span class="hint">@T["A comma-separated list of HTTP response status codes to handle as activity outcomes. For example: 200, 404, 500"]</span>
 </div>
 
+<div class="mb-3" asp-validation-class-for="TimeoutSeconds">
+    <label asp-for="TimeoutSeconds" class="form-label">@T["Timeout (seconds)"]</label>
+    <input type="number" class="form-control" asp-for="TimeoutSeconds" min="0" />
+    <span asp-validation-for="TimeoutSeconds"></span>
+    <span class="hint">@T["Optional per-request timeout in seconds. Use 0 to rely on workflow cancellation only."]</span>
+</div>
+
 <style asp-name="codemirror"></style>
 <script asp-name="codemirror" at="Foot"></script>
 <script asp-name="codemirror-mode-javascript" at="Foot"></script>
