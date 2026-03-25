@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ namespace OrchardCore.Workflows.Services
                 var title = syntax switch
                 {
                     WorkflowExpressionSyntaxNames.JavaScript => await EvaluateJavaScriptAsync(expression, workflowContext),
-                    WorkflowExpressionSyntaxNames.Liquid => await _expressionEvaluator.EvaluateAsync(new WorkflowExpression<string>(expression), workflowContext, HtmlEncoder.Default),
+                    WorkflowExpressionSyntaxNames.Liquid => WebUtility.HtmlDecode(await _expressionEvaluator.EvaluateAsync(new WorkflowExpression<string>(expression), workflowContext, HtmlEncoder.Default)),
                     _ => throw new InvalidOperationException($"Unsupported workflow title expression syntax '{workflowType.TitleExpressionSyntax}'.")
                 };
 
