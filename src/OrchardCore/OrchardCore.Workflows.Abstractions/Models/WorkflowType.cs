@@ -21,6 +21,16 @@ namespace OrchardCore.Workflows.Models
         public string Name { get; set; }
 
         /// <summary>
+        /// The template used to generate workflow instance titles.
+        /// </summary>
+        public string TitleExpression { get; set; }
+
+        /// <summary>
+        /// The expression syntax used to generate workflow instance titles.
+        /// </summary>
+        public string TitleExpressionSyntax { get; set; }
+
+        /// <summary>
         /// Whether this workflow definition is enabled or not.
         /// </summary>
         public bool IsEnabled { get; set; }

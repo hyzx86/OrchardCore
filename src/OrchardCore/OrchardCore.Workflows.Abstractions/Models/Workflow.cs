@@ -28,6 +28,11 @@ namespace OrchardCore.Workflows.Models
         /// </summary>
         public JObject State { get; set; } = new JObject();
 
+        /// <summary>
+        /// A user-facing title generated from the workflow type template.
+        /// </summary>
+        public string Title { get; set; }
+
         public WorkflowStatus Status { get; set; }
         public string FaultMessage { get; set; }
 

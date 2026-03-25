@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using OrchardCore.Workflows.Models;
 
 namespace OrchardCore.Workflows.ViewModels
 {
@@ -8,6 +9,9 @@ namespace OrchardCore.Workflows.ViewModels
 
         [Required]
         public string Name { get; set; }
+
+        public string TitleExpression { get; set; }
+        public string TitleExpressionSyntax { get; set; } = WorkflowExpressionSyntaxNames.Liquid;
 
         public bool IsEnabled { get; set; }
         public bool IsSingleton { get; set; }

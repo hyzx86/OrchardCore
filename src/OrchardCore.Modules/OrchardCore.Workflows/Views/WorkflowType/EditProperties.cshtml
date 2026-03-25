@@ -1,4 +1,5 @@
 @model OrchardCore.Workflows.ViewModels.WorkflowTypePropertiesViewModel
+@using OrchardCore.Workflows.Models
 
 <zone Name="Title"><h1>@RenderTitleSegments(T["Edit Workflow"])</h1></zone>
 
@@ -22,6 +23,22 @@
                 <input asp-for="Name" class="form-control" autofocus />
                 <span asp-validation-for="Name" class="text-danger"></span>
                 <div class="hint">@T["The name of the workflow."]</div>
+            </div>
+
+            <div class="mb-3" asp-validation-class-for="TitleExpressionSyntax">
+                <label asp-for="TitleExpressionSyntax" class="form-label">@T["Instance Title Syntax"]</label>
+                <select asp-for="TitleExpressionSyntax" class="form-select">
+                    <option value="@WorkflowExpressionSyntaxNames.Liquid">@T["Liquid"]</option>
+                    <option value="@WorkflowExpressionSyntaxNames.JavaScript">@T["JavaScript"]</option>
+                </select>
+                <span class="hint">@T["Choose the syntax used to generate workflow instance titles."]</span>
+            </div>
+
+            <div class="mb-3" asp-validation-class-for="TitleExpression">
+                <label asp-for="TitleExpression" class="form-label">@T["Instance Title Template"]</label>
+                <textarea asp-for="TitleExpression" rows="5" class="form-control"></textarea>
+                <span asp-validation-for="TitleExpression" class="text-danger"></span>
+                <div class="hint">@T["Leave empty to keep using the workflow ID. The template is evaluated whenever a workflow instance is saved."]</div>
             </div>
 
             <div class="mb-3">

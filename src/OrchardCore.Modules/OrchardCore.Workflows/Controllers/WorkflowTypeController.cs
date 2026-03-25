@@ -243,6 +243,8 @@ namespace OrchardCore.Workflows.Controllers
                 {
                     Id = workflowType.Id,
                     Name = workflowType.Name,
+                    TitleExpression = workflowType.TitleExpression,
+                    TitleExpressionSyntax = string.IsNullOrWhiteSpace(workflowType.TitleExpressionSyntax) ? WorkflowExpressionSyntaxNames.Liquid : workflowType.TitleExpressionSyntax,
                     IsEnabled = workflowType.IsEnabled,
                     IsSingleton = workflowType.IsSingleton,
                     LockTimeout = workflowType.LockTimeout,
@@ -285,6 +287,8 @@ namespace OrchardCore.Workflows.Controllers
             }
 
             workflowType.Name = viewModel.Name?.Trim();
+            workflowType.TitleExpression = viewModel.TitleExpression?.Trim();
+            workflowType.TitleExpressionSyntax = string.IsNullOrWhiteSpace(viewModel.TitleExpressionSyntax) ? WorkflowExpressionSyntaxNames.Liquid : viewModel.TitleExpressionSyntax.Trim();
             workflowType.IsEnabled = viewModel.IsEnabled;
             workflowType.IsSingleton = viewModel.IsSingleton;
             workflowType.LockTimeout = viewModel.LockTimeout;
@@ -320,6 +324,8 @@ namespace OrchardCore.Workflows.Controllers
             return View(new WorkflowTypePropertiesViewModel
             {
                 Id = id,
+                TitleExpression = workflowType.TitleExpression,
+                TitleExpressionSyntax = string.IsNullOrWhiteSpace(workflowType.TitleExpressionSyntax) ? WorkflowExpressionSyntaxNames.Liquid : workflowType.TitleExpressionSyntax,
                 IsSingleton = workflowType.IsSingleton,
                 LockTimeout = workflowType.LockTimeout,
                 LockExpiration = workflowType.LockExpiration,
@@ -347,6 +353,8 @@ namespace OrchardCore.Workflows.Controllers
             workflowType.WorkflowTypeId = _workflowTypeIdGenerator.GenerateUniqueId(workflowType);
 
             workflowType.Name = viewModel.Name?.Trim();
+            workflowType.TitleExpression = viewModel.TitleExpression?.Trim();
+            workflowType.TitleExpressionSyntax = string.IsNullOrWhiteSpace(viewModel.TitleExpressionSyntax) ? WorkflowExpressionSyntaxNames.Liquid : viewModel.TitleExpressionSyntax.Trim();
             workflowType.IsEnabled = viewModel.IsEnabled;
             workflowType.IsSingleton = viewModel.IsSingleton;
             workflowType.LockTimeout = viewModel.LockTimeout;

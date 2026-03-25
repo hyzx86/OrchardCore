@@ -42,6 +42,8 @@ namespace OrchardCore.Workflows.Controllers
         private readonly IActivityDisplayManager _activityDisplayManager;
         private readonly INotifier _notifier;
         private readonly IUpdateModelAccessor _updateModelAccessor;
+        private readonly IWorkflowExecutionLogStore _workflowExecutionLogStore;
+        private readonly IWorkflowRetryService _workflowRetryService;
         protected readonly dynamic New;
         protected readonly IHtmlLocalizer H;
         private readonly IDistributedLock _distributedLock;
@@ -60,7 +62,9 @@ namespace OrchardCore.Workflows.Controllers
             IHtmlLocalizer<WorkflowController> htmlLocalizer,
             IDistributedLock distributedLock,
             IStringLocalizer<WorkflowController> stringLocalizer,
-            IUpdateModelAccessor updateModelAccessor)
+            IUpdateModelAccessor updateModelAccessor,
+            IWorkflowExecutionLogStore workflowExecutionLogStore = null,
+            IWorkflowRetryService workflowRetryService = null)
         {
             _pagerOptions = pagerOptions.Value;
             _session = session;
@@ -71,6 +75,8 @@ namespace OrchardCore.Workflows.Controllers
             _activityDisplayManager = activityDisplayManager;
             _notifier = notifier;
             _updateModelAccessor = updateModelAccessor;
+            _workflowExecutionLogStore = workflowExecutionLogStore;
+            _workflowRetryService = workflowRetryService;
             New = shapeFactory;
             H = htmlLocalizer;
             _distributedLock = distributedLock;
@@ -231,6 +237,8 @@ namespace OrchardCore.Workflows.Controllers
                 WorkflowTypeJson = JsonConvert.SerializeObject(workflowTypeData, Formatting.None, jsonSerializerSettings),
                 WorkflowJson = JsonConvert.SerializeObject(workflow, Formatting.Indented, jsonSerializerSettings),
                 ActivityDesignShapes = activityDesignShapes,
+                ExecutionLogs = _workflowExecutionLogStore == null ? Array.Empty<WorkflowExecutionLogEntry>() : await _workflowExecutionLogStore.ListAsync(workflow),
+                CanRetry = _workflowRetryService != null,
             };
 
             return View(viewModel);
@@ -303,6 +311,39 @@ namespace OrchardCore.Workflows.Controllers
             }
 
             return RedirectToAction(nameof(Index), new { workflowTypeId = workflowType.Id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Retry(long id)
+        {
+            if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageWorkflows))
+            {
+                return Forbid();
+            }
+
+            if (_workflowRetryService == null)
+            {
+                return NotFound();
+            }
+
+            var workflow = await _workflowStore.GetAsync(id);
+
+            if (workflow == null)
+            {
+                return NotFound();
+            }
+
+            var retriedContext = await _workflowRetryService.RetryAsync(workflow);
+
+            if (retriedContext == null)
+            {
+                await _notifier.ErrorAsync(H["The workflow instance could not be retried."]);
+                var workflowType = await _workflowTypeStore.GetAsync(workflow.WorkflowTypeId);
+                return RedirectToAction(nameof(Index), new { workflowTypeId = workflowType?.Id });
+            }
+
+            await _notifier.SuccessAsync(H["Workflow {0} has been retried.", id]);
+            return RedirectToAction(nameof(Details), new { id = retriedContext.Workflow.Id });
         }
 
         [HttpPost]

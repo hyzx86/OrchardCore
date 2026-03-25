@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using OrchardCore.Workflows.Models;
 
@@ -10,5 +11,7 @@ namespace OrchardCore.Workflows.ViewModels
         public IList<dynamic> ActivityDesignShapes { get; set; }
         public string WorkflowTypeJson { get; set; }
         public string WorkflowJson { get; set; }
+        public IReadOnlyList<WorkflowExecutionLogEntry> ExecutionLogs { get; set; } = Array.Empty<WorkflowExecutionLogEntry>();
+        public bool CanRetry { get; set; }
     }
 }

@@ -70,6 +70,7 @@ namespace OrchardCore.Workflows
 
             services.AddScoped<IWorkflowStore, WorkflowStore>();
             services.AddScoped<IWorkflowManager, WorkflowManager>();
+            services.AddScoped<IWorkflowTitleGenerator, WorkflowTitleGenerator>();
             services.AddScoped<IActivityDisplayManager, ActivityDisplayManager>();
             services.AddDataMigration<Migrations>();
             services.AddScoped<INavigationProvider, AdminMenu>();

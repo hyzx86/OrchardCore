@@ -26,6 +26,7 @@ namespace OrchardCore.Workflows.Services
         private readonly IWorkflowIdGenerator _workflowIdGenerator;
         private readonly Resolver<IEnumerable<IWorkflowValueSerializer>> _workflowValueSerializers;
         private readonly IWorkflowFaultHandler _workflowFaultHandler;
+        private readonly IWorkflowTitleGenerator _workflowTitleGenerator;
         private readonly IDistributedLock _distributedLock;
         private readonly ILogger _logger;
         private readonly ILogger<MissingActivity> _missingActivityLogger;
@@ -43,6 +44,7 @@ namespace OrchardCore.Workflows.Services
             IWorkflowIdGenerator workflowIdGenerator,
             Resolver<IEnumerable<IWorkflowValueSerializer>> workflowValueSerializers,
             IWorkflowFaultHandler workflowFaultHandler,
+            IWorkflowTitleGenerator workflowTitleGenerator,
             IDistributedLock distributedLock,
             ILogger<WorkflowManager> logger,
             ILogger<MissingActivity> missingActivityLogger,
@@ -55,6 +57,7 @@ namespace OrchardCore.Workflows.Services
             _workflowIdGenerator = workflowIdGenerator;
             _workflowValueSerializers = workflowValueSerializers;
             _workflowFaultHandler = workflowFaultHandler;
+            _workflowTitleGenerator = workflowTitleGenerator;
             _distributedLock = distributedLock;
             _logger = logger;
             _missingActivityLogger = missingActivityLogger;
@@ -580,6 +583,7 @@ namespace OrchardCore.Workflows.Services
             state.ActivityStates = workflowContext.Activities.ToDictionary(x => x.Key, x => x.Value.Activity.Properties);
 
             workflowContext.Workflow.State = JObject.FromObject(state);
+            workflowContext.Workflow.Title = await _workflowTitleGenerator.GenerateTitleAsync(workflowContext);
             await _workflowStore.SaveAsync(workflowContext.Workflow);
         }
 
