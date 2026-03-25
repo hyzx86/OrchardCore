@@ -100,12 +100,13 @@ namespace OrchardCore.Tests.Workflows
             var workflowIdGenerator = new Mock<IWorkflowIdGenerator>();
             workflowIdGenerator.Setup(x => x.GenerateUniqueId(It.IsAny<Workflow>())).Returns(IdGenerator.GenerateId());
             var distributedLock = new Mock<IDistributedLock>();
+
             var workflowManagerLogger = new Mock<ILogger<WorkflowManager>>();
-            var workflowContextLogger = new Mock<ILogger<WorkflowExecutionContext>>();
             var missingActivityLogger = new Mock<ILogger<MissingActivity>>();
             var missingActivityLocalizer = new Mock<IStringLocalizer<MissingActivity>>();
             var clock = new Mock<IClock>();
             var workflowFaultHandler = new Mock<IWorkflowFaultHandler>();
+            var workflowTitleGenerator = new Mock<IWorkflowTitleGenerator>();
             var workflowManager = new WorkflowManager(
                 activityLibrary.Object,
                 workflowTypeStore.Object,
@@ -113,6 +114,7 @@ namespace OrchardCore.Tests.Workflows
                 workflowIdGenerator.Object,
                 workflowValueSerializers,
                 workflowFaultHandler.Object,
+                workflowTitleGenerator.Object,
                 distributedLock.Object,
                 workflowManagerLogger.Object,
                 missingActivityLogger.Object,
