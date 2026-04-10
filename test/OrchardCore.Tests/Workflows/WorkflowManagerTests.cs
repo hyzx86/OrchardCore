@@ -64,6 +64,7 @@ namespace OrchardCore.Tests.Workflows
         private static IServiceProvider CreateServiceProvider()
         {
             var services = new ServiceCollection();
+            services.AddMemoryCache();
             services.AddScoped(typeof(Resolver<>));
             services.AddScoped(provider => new Mock<IShapeFactory>().Object);
             services.AddScoped(provider => new Mock<IViewLocalizer>().Object);
@@ -74,7 +75,7 @@ namespace OrchardCore.Tests.Workflows
 
         private static IWorkflowScriptEvaluator CreateWorkflowScriptEvaluator(IServiceProvider serviceProvider)
         {
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var memoryCache = serviceProvider.GetRequiredService<IMemoryCache>();
             var javaScriptEngine = new JavaScriptEngine(memoryCache);
             var workflowContextHandlers = new Resolver<IEnumerable<IWorkflowExecutionContextHandler>>(serviceProvider);
             var globalMethodProviders = Array.Empty<IGlobalMethodProvider>();
